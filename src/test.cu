@@ -1,10 +1,10 @@
-#include <iostream>
-#include <cuda.h>
 #include "kernels.cuh"
+#include <cuda.h>
+#include <iostream>
 
 using namespace kernels;
 
-void printGrid(bool* grid, int N) {
+void printGrid(bool *grid, int N) {
     for (int i = 0; i < N + 2; ++i) {
         for (int j = 0; j < N + 2; ++j) {
             std::cout << grid[i * (N + 2) + j] << " ";
@@ -15,7 +15,7 @@ void printGrid(bool* grid, int N) {
 }
 
 int main() {
-    const int N = 4;  // actual grid size (ghost borders make it (N+2)x(N+2))
+    const int N = 4; // actual grid size (ghost borders make it (N+2)x(N+2))
     const int totalSize = (N + 2) * (N + 2);
 
     // Allocate and initialize host memory
@@ -42,8 +42,7 @@ int main() {
 
     // Launch kernel
     dim3 blockSize(16, 16);
-    dim3 gridSize((N + blockSize.x - 1) / blockSize.x,
-                  (N + blockSize.y - 1) / blockSize.y);
+    dim3 gridSize((N + blockSize.x - 1) / blockSize.x, (N + blockSize.y - 1) / blockSize.y);
     simpleGhostNextGenerationKernel<<<gridSize, blockSize>>>(d_current, d_next, N);
     cudaDeviceSynchronize();
 
