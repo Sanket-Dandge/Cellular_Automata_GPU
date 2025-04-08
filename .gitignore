@@ -8,3 +8,4 @@ bin/
 CMakeLists.txt.user
 CMakeUserPresets.json
 compile_commands.json
+.cache/

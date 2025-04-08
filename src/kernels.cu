@@ -1,4 +1,5 @@
 #include "kernels.cuh"
+#include "kernels.hpp"
 #include <cstddef>
 #include <cuda.h>
 
@@ -52,3 +53,23 @@ namespace kernels {
         grid[toLinearIndex(N - 1, 0, pitch)] = grid[toLinearIndex(1, N - 2, pitch)];
     }
 } // namespace kernels
+
+void computeNextGen(bool *currentGrid, bool *nextGrid, int N) {
+    // Allocate device memory
+    bool *d_current, *d_next;
+    int totalSize = N * N;
+    cudaMalloc(&d_current, totalSize * sizeof(bool));
+    cudaMalloc(&d_next, totalSize * sizeof(bool));
+
+    // Copy data to device
+    cudaMemcpy(d_current, currentGrid, totalSize * sizeof(bool), cudaMemcpyHostToDevice);
+
+    // Launch kernel
+    dim3 blockSize(16, 16);
+    dim3 gridSize((N + blockSize.x - 1) / blockSize.x, (N + blockSize.y - 1) / blockSize.y);
+    kernels::computeNextGenKernel<<<gridSize, blockSize>>>(d_current, d_next, N);
+    cudaDeviceSynchronize();
+
+    // Copy result back to host
+    cudaMemcpy(nextGrid, d_next, totalSize * sizeof(bool), cudaMemcpyDeviceToHost);
+}

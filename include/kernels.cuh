@@ -7,7 +7,7 @@
 
 namespace kernels {
     __host__ __device__ int countNeighbors(bool *currentGrid, int col, int row, int gridSize);
-    __global__ void simpleGhostNextGenerationKernel(bool *currentGrid, bool *nextGrid, int N);
+    __global__ void computeNextGenKernel(bool *currentGrid, bool *nextGrid, int N);
 } // namespace kernels
 
 #endif

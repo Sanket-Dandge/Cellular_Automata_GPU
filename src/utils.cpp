@@ -1,22 +1,31 @@
 #include "utils.h"
+#include <memory>
+#define STB_IMAGE_WRITE_IMPLEMENTATION
+#include "stb_image_write.h"
 #include <cstdio>
 #include <cstdlib>
 #include <ctime>
+#include <fstream>
 #include <iostream>
 #include <string>
+#include <vector>
+
+using namespace std;
 
 namespace utils {
-    void read_configuration_from_file(bool *X, std::string filename, size_t N) {
-        FILE *file = fopen(filename.c_str(), "r+");
-        if (file == NULL) {
-            std::cout << "Could not open file: " << filename << std::endl;
-            std::cout << "Exiting!" << std::endl;
+
+    void read_configuration_from_file(bool *X, const string &filename, size_t N) {
+        ifstream file(filename, ios::binary);
+        if (!file) {
+            cout << "Could not open file: " << filename << endl;
+            cout << "Exiting!" << endl;
             return;
         }
 
-        int size = fread(X, sizeof(bool), N * N, file);
-        std::cout << "elements: " << size << std::endl;
-        fclose(file);
+        file.read(reinterpret_cast<char *>(X), N * N);
+        streamsize size = file.gcount();
+
+        cout << "elements: " << size << endl;
     }
 
     void generate_random_grid(bool *X, size_t N) {
@@ -29,17 +38,33 @@ namespace utils {
                 count += X[i * N + j];
             }
         }
-        std::cout << "Number of non zero elements: " << count << std::endl;
-        std::cout << "Percent: " << (float)count / (float)(N * N) << std::endl;
+        cout << "Number of non zero elements: " << count << endl;
+        cout << "Percent: " << (float)count / (float)(N * N) << endl;
     }
 
     void save_grid(bool *X, size_t N) {
         FILE *file;
         char filename[20];
-        std::cout << filename << "table " << N << "x" << N << std::endl;
-        std::cout << "Saving table in file " << filename << std::endl;
+        cout << filename << "table " << N << "x" << N << endl;
+        cout << "Saving table in file " << filename << endl;
         file = fopen(filename, "w+");
         fwrite(X, sizeof(int), N * N, file);
         fclose(file);
+    }
+
+    void save_grid_to_png(bool *X, int gridSize, int iteration) {
+        // Create an 8-bit grayscale buffer (1 byte per pixel)
+        unique_ptr<unsigned char[]> image(new unsigned char[gridSize * gridSize]);
+
+        for (int i = 0; i < gridSize * gridSize; i++) {
+            image[i] = X[i] ? 255 : 0;
+        }
+
+        // Construct filename like "gol_42.png"
+        char filename[64];
+        snprintf(filename, sizeof(filename), "gol_%d.png", iteration);
+
+        // Write PNG: width, height, channels = 1 (grayscale), stride = width * 1 byte
+        stbi_write_png(filename, gridSize, gridSize, 1, image.get(), gridSize);
     }
 } // namespace utils
