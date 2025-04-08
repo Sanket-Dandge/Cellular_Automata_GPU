@@ -27,6 +27,5 @@ target_link_libraries(${PROJECT_NAME}_gol
 add_executable(${PROJECT_NAME}.o
   src/test.cpp)
 target_link_libraries(${PROJECT_NAME}.o
-  ${PROJECT_NAME}_cuda
-  ${PROJECT_NAME}_cuda
+  ${PROJECT_NAME}_gol
 )

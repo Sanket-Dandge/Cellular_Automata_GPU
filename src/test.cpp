@@ -1,9 +1,5 @@
 #include "game_of_life.hpp"
-#include "kernels.cuh"
-#include <cuda.h>
 #include <iostream>
-
-using namespace kernels;
 
 // void printGrid(bool *grid, int N) {
 //     for (int i = 0; i < N + 2; ++i) {
