@@ -14,21 +14,8 @@ using namespace std;
 
 namespace utils {
 
-    void read_configuration_from_file(bool *X, const string &filename, size_t N) {
-        ifstream file(filename, ios::binary);
-        if (!file) {
-            cout << "Could not open file: " << filename << endl;
-            cout << "Exiting!" << endl;
-            return;
-        }
-
-        file.read(reinterpret_cast<char *>(X), N * N);
-        streamsize size = file.gcount();
-
-        cout << "elements: " << size << endl;
-    }
-
     void generate_random_grid(bool *X, size_t N) {
+        cout << "Initializing random grid" << endl;
         srand(time(NULL));
         int count = 0;
 

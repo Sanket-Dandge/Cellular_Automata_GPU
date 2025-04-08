@@ -1,7 +1,11 @@
 cmake_minimum_required(VERSION 3.18)
 project(game_of_life LANGUAGES CXX CUDA)
 
-set(CUDA_NVCC_FLAGS "-arch=sm_86")
+set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CUDA_STANDARD 14)
+
+# set(CUDA_NVCC_FLAGS "-arch=sm_86")
 set(EXECUTABLE_OUTPUT_PATH ${CMAKE_CURRENT_SOURCE_DIR}/bin)
 
 include_directories(
