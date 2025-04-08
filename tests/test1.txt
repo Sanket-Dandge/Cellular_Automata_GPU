@@ -1,0 +1,3 @@
+size 1024
+gridFile patterns/heisenburp-30.rle
+generations 10000
