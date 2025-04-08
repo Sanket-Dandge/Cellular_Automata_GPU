@@ -16,11 +16,12 @@
 
 namespace kernels {
     __host__ __device__ int countNeighbors(bool *currentGrid, int col, int row, int gridSize) {
-        int leftCol = col - 1;
-        int rightCol = col + 1;
+        int leftCol = (col - 1 + gridSize) % gridSize;
+        int rightCol = (col + 1) % gridSize;
         int rowOffset = row * gridSize;
-        int topRowOffset = rowOffset - gridSize;
-        int bottomRowOffset = rowOffset + gridSize;
+        int topRowOffset = ((row - 1 + gridSize) % gridSize) * gridSize;
+        int bottomRowOffset = ((row + 1) % gridSize) * gridSize;
+        // int bottomRowOffset = rowOffset + gridSize;
 
         return currentGrid[leftCol + topRowOffset] + currentGrid[col + topRowOffset] +
                currentGrid[rightCol + topRowOffset] + currentGrid[leftCol + bottomRowOffset] +
@@ -32,15 +33,16 @@ namespace kernels {
         int col = blockIdx.x * blockDim.x + threadIdx.x;
         int row = blockIdx.y * blockDim.y + threadIdx.y;
 
-        if (col == 0 || col == N - 1 || row == 0 || row == N - 1) {
-            return;
-        }
+        // if (col == 0 || col == N - 1 || row == 0 || row == N - 1) {
+        //     return;
+        // }
         size_t rowOffset = row * N;
         int index = rowOffset + col;
-        if (index >= 1024 * 1024) {
+        if (index >= N * N) {
             printf("%d,%d\n", col, row);
         }
         int livingNeighbors = kernels::countNeighbors(currentGrid, col, row, N);
+        // int livingNeighbors = 3;
         nextGrid[index] =
             livingNeighbors == 3 || (livingNeighbors == 2 && currentGrid[index]) ? 1 : 0;
         return;

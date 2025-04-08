@@ -1,5 +1,6 @@
 #include "game_of_life.hpp"
 #include <chrono>
+#include <cstdio>
 #include <iostream>
 
 struct ScopedTimer {
@@ -26,11 +27,13 @@ int main(int argc, char *argv[]) {
     GameOfLife life(config);
     utils::save_grid_to_png(life.grid.get(), life.getGridSize(), 1);
 
-    for (int i = 1; i < 10; i++) {
-        int iters = 2u << i;
-        ScopedTimer __t(format("Iterations-{}", iters));
-        life.run(iters, 1);
-    }
+    cout << life.getGridSize() << endl;
+    // for (int i = 1; i < 10; i++) {
+    {int iters = 1000;
+    ScopedTimer __t(format("Iterations-{}", iters));
+    life.run(iters, 1024);}
+    // }
+
 
     return 0;
 }
