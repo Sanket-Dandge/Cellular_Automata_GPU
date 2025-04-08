@@ -3,7 +3,6 @@
 #include <cstddef>
 #include <cstdio>
 #include <cuda.h>
-#include <stdio.h>
 
 #define CUDA_CHECK(call)                                                                           \
     {                                                                                              \
@@ -15,83 +14,56 @@
     }
 
 namespace kernels {
-    __host__ __device__ int countNeighbors(bool *currentGrid, int col, int row, int gridSize) {
-        int leftCol = (col - 1 + gridSize) % gridSize;
-        int rightCol = (col + 1) % gridSize;
-        int rowOffset = row * gridSize;
-        int topRowOffset = ((row - 1 + gridSize) % gridSize) * gridSize;
-        int bottomRowOffset = ((row + 1) % gridSize) * gridSize;
-        // int bottomRowOffset = rowOffset + gridSize;
+    __host__ __device__ int count_neighbors(bool *current_grid, int col, int row, int grid_size) {
+        int left_col = (col - 1 + grid_size) % grid_size;
+        int right_col = (col + 1) % grid_size;
+        int row_offset = row * grid_size;
+        int top_row_offset = ((row - 1 + grid_size) % grid_size) * grid_size;
+        int bottom_row_offset = ((row + 1) % grid_size) * grid_size;
 
-        return currentGrid[leftCol + topRowOffset] + currentGrid[col + topRowOffset] +
-               currentGrid[rightCol + topRowOffset] + currentGrid[leftCol + bottomRowOffset] +
-               currentGrid[col + bottomRowOffset] + currentGrid[rightCol + bottomRowOffset] +
-               currentGrid[leftCol + rowOffset] + currentGrid[rightCol + rowOffset];
+        return current_grid[left_col + top_row_offset] + current_grid[col + top_row_offset] +
+               current_grid[right_col + top_row_offset] + current_grid[left_col + bottom_row_offset] +
+               current_grid[col + bottom_row_offset] + current_grid[right_col + bottom_row_offset] +
+               current_grid[left_col + row_offset] + current_grid[right_col + row_offset];
     }
 
-    __global__ void computeNextGenKernel(bool *currentGrid, bool *nextGrid, int N) {
+    __global__ void compute_next_gen_kernel(bool *current_grid, bool *next_grid, int N) {
         int col = blockIdx.x * blockDim.x + threadIdx.x;
         int row = blockIdx.y * blockDim.y + threadIdx.y;
 
-        // if (col == 0 || col == N - 1 || row == 0 || row == N - 1) {
-        //     return;
-        // }
-        size_t rowOffset = row * N;
-        int index = rowOffset + col;
+        size_t row_offset = row * N;
+        int index = row_offset + col;
         if (index >= N * N) {
             printf("%d,%d\n", col, row);
         }
-        int livingNeighbors = kernels::countNeighbors(currentGrid, col, row, N);
-        // int livingNeighbors = 3;
-        nextGrid[index] =
-            livingNeighbors == 3 || (livingNeighbors == 2 && currentGrid[index]) ? 1 : 0;
+        int living_neighbors = kernels::count_neighbors(current_grid, col, row, N);
+        next_grid[index] =
+            living_neighbors == 3 || (living_neighbors == 2 && current_grid[index]) ? true : false;
         return;
     }
 
-    __global__ void updateGhostRows(bool *grid, int N, size_t pitch) {
-        int x = blockIdx.x * blockDim.x + threadIdx.x + 1;
-        if (x < N - 1) {
-            grid[toLinearIndex(N - 1, x, pitch)] = grid[toLinearIndex(1, x, pitch)];
-            grid[toLinearIndex(0, x, pitch)] = grid[toLinearIndex(N - 2, x, pitch)];
-        }
-    }
-
-    __global__ void updateGhostCols(bool *grid, int N, int pitch) {
-        int y = blockIdx.y * blockDim.y + threadIdx.y + 1;
-        if (y < N - 1) {
-            grid[toLinearIndex(y, N - 1, pitch)] = grid[toLinearIndex(y, 1, pitch)];
-            grid[toLinearIndex(y, 0, pitch)] = grid[toLinearIndex(y, N - 2, pitch)];
-        }
-    }
-
-    __global__ void updateGhostCorners(bool *grid, int N, int pitch) {
-        grid[toLinearIndex(0, 0, pitch)] = grid[toLinearIndex(N - 2, N - 2, pitch)];
-        grid[toLinearIndex(N - 1, N - 1, pitch)] = grid[toLinearIndex(1, 1, pitch)];
-        grid[toLinearIndex(0, N - 1, pitch)] = grid[toLinearIndex(N - 2, 1, pitch)];
-        grid[toLinearIndex(N - 1, 0, pitch)] = grid[toLinearIndex(1, N - 2, pitch)];
-    }
 } // namespace kernels
 
-void computeNextGen(bool *currentGrid, bool *nextGrid, int N) {
+void compute_next_gen(bool *current_grid, bool *next_grid, size_t ca_grid_size) {
     // Allocate device memory
-    bool *d_current, *d_next;
-    int totalSize = N * N;
-    CUDA_CHECK(cudaMalloc(&d_current, totalSize * sizeof(bool)));
-    CUDA_CHECK(cudaMalloc(&d_next, totalSize * sizeof(bool)));
+    bool *d_current = nullptr, *d_next = nullptr;
+    size_t total_size = ca_grid_size * ca_grid_size;
+    CUDA_CHECK(cudaMalloc(&d_current, total_size * sizeof(bool)));
+    CUDA_CHECK(cudaMalloc(&d_next, total_size * sizeof(bool)));
 
     // Copy data to device
     CUDA_CHECK(
-        cudaMemcpy(d_current, currentGrid, totalSize * sizeof(bool), cudaMemcpyHostToDevice));
+        cudaMemcpy(d_current, current_grid, total_size * sizeof(bool), cudaMemcpyHostToDevice));
 
     // Launch kernel
-    dim3 blockSize(32, 32);
-    dim3 gridSize((N + blockSize.x - 1) / blockSize.x, (N + blockSize.y - 1) / blockSize.y);
-    kernels::computeNextGenKernel<<<gridSize, blockSize>>>(d_current, d_next, N);
+    dim3 block_size(32, 32);
+    dim3 grid_size((ca_grid_size + block_size.x - 1) / block_size.x, (ca_grid_size + block_size.y - 1) / block_size.y);
+    kernels::compute_next_gen_kernel<<<grid_size, block_size>>>(d_current, d_next, ca_grid_size);
     CUDA_CHECK(cudaGetLastError());
     cudaDeviceSynchronize();
 
     // Copy result back to host
-    CUDA_CHECK(cudaMemcpy(nextGrid, d_next, totalSize * sizeof(bool), cudaMemcpyDeviceToHost));
+    CUDA_CHECK(cudaMemcpy(next_grid, d_next, total_size * sizeof(bool), cudaMemcpyDeviceToHost));
     CUDA_CHECK(cudaFree(d_current));
     CUDA_CHECK(cudaFree(d_next));
 }

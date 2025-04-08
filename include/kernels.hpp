@@ -1,4 +1,6 @@
 #pragma once
 
 // TODO: add it to namespace
-void computeNextGen(bool *currentGrid, bool *nextGrid, int N);
+#include <cstddef>
+
+void compute_next_gen(bool *current_grid, bool *next_grid, size_t grid_size);

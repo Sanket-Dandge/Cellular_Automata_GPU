@@ -1,5 +1,6 @@
 #include "game_of_life.hpp"
 #include "kernels.hpp"
+#include <algorithm>
 #include <filesystem>
 
 #include <bit>
@@ -9,6 +10,7 @@
 #include <sstream>
 #include <string>
 #include <unordered_set>
+#include <utility>
 #include <vector>
 
 namespace fs = std::filesystem;
@@ -17,49 +19,49 @@ GameOfLife::GameOfLife() {
     grid = shared_ptr<bool[]>(new bool[GRID_SIZE * GRID_SIZE]);
     utils::generate_random_grid(grid.get(), GRID_SIZE);
 }
-GameOfLife::GameOfLife(shared_ptr<bool[]> grid) : grid(grid) {}
+GameOfLife::GameOfLife(shared_ptr<bool[]> grid) : grid(std::move(grid)) {}
 
 GameOfLife::GameOfLife(const AutomatonConfiguration &config) {
     if (config.size == "nextPower") {
-        if (config.generateRandom) {
+        if (config.generate_random) {
             cerr << "cannot use nextPower with random" << endl;
             exit(1);
         } else {
-            auto patternSize = get_rle_size(config.gridFile->string());
-            gridSize = bit_ceil(max(max(patternSize.first, patternSize.second), 32u));
+            auto pattern_size = get_rle_size(config.grid_file->string());
+            grid_size = bit_ceil(max({pattern_size.first, pattern_size.second, 32U}));
         }
     } else {
-        gridSize = stoi(config.size);
+        grid_size = stoi(config.size);
     }
 
-    grid = shared_ptr<bool[]>(new bool[gridSize * gridSize]);
+    grid = shared_ptr<bool[]>(new bool[grid_size * grid_size]);
 
-    if (config.generateRandom) {
-        utils::generate_random_grid(grid.get(), gridSize);
+    if (config.generate_random) {
+        utils::generate_random_grid(grid.get(), grid_size);
     } else {
-        load_grid_from_file(config.gridFile->string());
+        load_grid_from_file(config.grid_file->string());
     }
 }
 GameOfLife::GameOfLife(const string &filename) : GameOfLife(AutomatonConfiguration(filename)) {}
 
-void GameOfLife::run(int iterations, int snapshotInterval) {
+void GameOfLife::run(int iterations, int snapshot_interval) {
     // TODO: optimize if possible
-    auto grid1 = make_unique<bool[]>(gridSize * gridSize);
-    auto grid2 = make_unique<bool[]>(gridSize * gridSize);
+    auto grid1 = make_unique<bool[]>(grid_size * grid_size);
+    auto grid2 = make_unique<bool[]>(grid_size * grid_size);
 
     // Copy the original grid into grid1
-    copy(grid.get(), grid.get() + gridSize * gridSize, grid1.get());
+    copy(grid.get(), grid.get() + (grid_size * grid_size), grid1.get());
 
     for (int i = 0; i < iterations; i++) {
-        computeNextGen(grid1.get(), grid2.get(), gridSize);
-        if (i % snapshotInterval == 0) {
-            utils::save_grid_to_png(grid2.get(), gridSize, i);
+        compute_next_gen(grid1.get(), grid2.get(), grid_size);
+        if (i % snapshot_interval == 0) {
+            utils::save_grid_to_png(grid2.get(), grid_size, i);
         }
         swap(grid1, grid2);
     }
 
     // Copy final state back into original grid
-    copy(grid1.get(), grid1.get() + gridSize * gridSize, grid.get());
+    copy(grid1.get(), grid1.get() + (grid_size * grid_size), grid.get());
 }
 
 AutomatonConfiguration::AutomatonConfiguration(const fs::path &filename) {
@@ -67,24 +69,24 @@ AutomatonConfiguration::AutomatonConfiguration(const fs::path &filename) {
 
     // Resolve gridFile path
     if (config.contains("gridFile") && config["gridFile"] != "random") {
-        gridFile = fs::path(config["gridFile"]);
+        grid_file = fs::path(config["gridFile"]);
 
         // Make it relative to config file location if it's not absolute
-        if (gridFile && !gridFile->is_absolute()) {
-            gridFile = filename.parent_path() / *gridFile;
+        if (grid_file && !grid_file->is_absolute()) {
+            grid_file = filename.parent_path() / *grid_file;
         }
     } else {
-        gridFile = nullopt;
-        generateRandom = true;
+        grid_file = nullopt;
+        generate_random = true;
     }
     size = config.contains("size") ? config["size"] : "nextPower";
-    string generationsConfig = config.contains("generations") ? config["generations"] : "1000";
-    generations = stoi(generationsConfig);
+    string generations_config = config.contains("generations") ? config["generations"] : "1000";
+    generations = stoi(generations_config);
 
-    const unordered_set<string> allowedKeys = {"gridFile", "size", "generations"};
-    for (auto kv : config) {
-        if (!allowedKeys.contains(kv.first)) {
-            cerr << "Unknown key found in configuration `" << kv.first << "'";
+    const unordered_set<string> allowed_keys = {"gridFile", "size", "generations"};
+    for (auto kv_pair : config) {
+        if (!allowed_keys.contains(kv_pair.first)) {
+            cerr << "Unknown key found in configuration `" << kv_pair.first << "'";
         }
     }
 }
@@ -100,8 +102,9 @@ unordered_map<string, string> AutomatonConfiguration::parse(const fs::path &file
         line.erase(line.find_last_not_of(" \t\r\n") + 1);
 
         // Skip empty lines or comments
-        if (line.empty() || line[0] == '#')
+        if (line.empty() || line[0] == '#') {
             continue;
+        }
 
         // Split key and value
         istringstream iss(line);
@@ -131,10 +134,11 @@ pair<uint, uint> GameOfLife::get_rle_size(const string &filename) {
     // Parse header and RLE data
     while (getline(file, line)) {
         // Skip comments
-        if (line.empty() || line[0] == '#')
+        if (line.empty() || line[0] == '#') {
             continue;
+        }
 
-        if (line.rfind("x =", 0) == 0) {
+        if (line.starts_with("x =")) {
             // Header line: parse dimensions
             smatch match;
             regex header_regex(R"(x\s*=\s*(\d+),\s*y\s*=\s*(\d+))");
@@ -148,6 +152,7 @@ pair<uint, uint> GameOfLife::get_rle_size(const string &filename) {
     return {GRID_SIZE, GRID_SIZE};
 }
 
+// NOLINTBEGIN
 void GameOfLife::load_grid_from_file(const string &filename) {
     cout << "Reading initial grid setup from " << filename << endl;
     if (!fs::exists(filename)) {
@@ -160,7 +165,7 @@ void GameOfLife::load_grid_from_file(const string &filename) {
     }
 
     // Clear the grid
-    for (size_t i = 0; i < gridSize * gridSize; ++i) {
+    for (size_t i = 0; i < grid_size * grid_size; ++i) {
         grid[i] = false;
     }
 
@@ -181,7 +186,7 @@ void GameOfLife::load_grid_from_file(const string &filename) {
             if (regex_search(line, match, header_regex)) {
                 pattern_width = stoi(match[1]);
                 pattern_height = stoi(match[2]);
-                if (pattern_width > gridSize || pattern_height > gridSize) {
+                if (pattern_width > grid_size || pattern_height > grid_size) {
                     throw runtime_error("Pattern too big for current grid");
                 }
             }
@@ -204,8 +209,8 @@ void GameOfLife::load_grid_from_file(const string &filename) {
             bool value = (c == 'o');
 
             for (size_t j = 0; j < count; ++j) {
-                if (x < gridSize && y < gridSize)
-                    grid[y * gridSize + x] = value;
+                if (x < grid_size && y < grid_size)
+                    grid[y * grid_size + x] = value;
                 x++;
             }
 
@@ -220,3 +225,4 @@ void GameOfLife::load_grid_from_file(const string &filename) {
         }
     }
 }
+// NOLINTEND

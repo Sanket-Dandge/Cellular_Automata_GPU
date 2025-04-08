@@ -4,10 +4,12 @@
 #include <iostream>
 
 struct ScopedTimer {
+  private:
     string label;
     chrono::high_resolution_clock::time_point start;
 
-    ScopedTimer(const string &l) : label(l), start(chrono::high_resolution_clock::now()) {}
+  public:
+    ScopedTimer(const string &lable) : label(lable), start(chrono::high_resolution_clock::now()) {}
     ~ScopedTimer() {
         auto end = chrono::high_resolution_clock::now();
         auto dur = chrono::duration_cast<chrono::microseconds>(end - start).count();
@@ -21,19 +23,20 @@ int main(int argc, char *argv[]) {
         return 1;
     }
 
-    string configFile = argv[1];
+    string config_file = argv[1];
 
-    auto config = AutomatonConfiguration(configFile);
+    auto config = AutomatonConfiguration(config_file);
     GameOfLife life(config);
-    utils::save_grid_to_png(life.grid.get(), life.getGridSize(), 1);
+    utils::save_grid_to_png(life.grid.get(), life.get_grid_size(), 1);
 
-    cout << life.getGridSize() << endl;
+    cout << life.get_grid_size() << endl;
     // for (int i = 1; i < 10; i++) {
-    {int iters = 1000;
-    ScopedTimer __t(format("Iterations-{}", iters));
-    life.run(iters, 1024);}
+    {
+        int iters = 1000;
+        ScopedTimer t(format("Iterations-{}", iters));
+        life.run(iters, 1024);
+    }
     // }
-
 
     return 0;
 }

@@ -12,22 +12,24 @@
 using namespace std;
 namespace fs = std::filesystem;
 
-class AutomatonConfiguration {
+// NOLINTBEGIN(misc-non-private-member-variables-in-classes)
+struct AutomatonConfiguration {
   private:
-    unordered_map<string, string> parse(const fs::path &filename);
+    static unordered_map<string, string> parse(const fs::path &filename);
 
   public:
-    optional<fs::path> gridFile;
-    bool generateRandom;
+    optional<fs::path> grid_file;
+    bool generate_random;
     string size;
     int generations;
 
     AutomatonConfiguration(const fs::path &filename);
 };
+// NOLINTEND(misc-non-private-member-variables-in-classes)
 
 class GameOfLife {
   private:
-    int gridSize = GRID_SIZE;
+    size_t grid_size = GRID_SIZE;
 
     void read_configuration_from_file(const string &filename);
     void load_grid_from_file(const string &filename);
@@ -41,8 +43,8 @@ class GameOfLife {
     GameOfLife(const string &filename);
     GameOfLife(const AutomatonConfiguration &config);
 
-    void run(int iterations, int snapshotInterval = 10);
-    int getGridSize() { return gridSize; }
+    void run(int iterations, int snapshot_interval = 10);
+    [[nodiscard]] size_t get_grid_size() const { return grid_size; }
 };
 
 #endif

@@ -17,46 +17,53 @@ namespace fs = std::filesystem;
 
 namespace utils {
 
-    void generate_random_grid(bool *X, size_t N) {
+    void generate_random_grid(bool *grid, size_t grid_size) {
         cout << "Initializing random grid" << endl;
-        srand(time(NULL));
+        srand(time(nullptr));
         int count = 0;
 
-        for (size_t i = 0; i < N; i++) {
-            for (size_t j = 0; j < N; j++) {
-                X[i * N + j] = ((float)rand() / (float)RAND_MAX) < THRESHOLD;
-                count += X[i * N + j];
+        for (size_t i = 0; i < grid_size; i++) {
+            for (size_t j = 0; j < grid_size; j++) {
+                grid[i * grid_size + j] = ((float)rand() / (float)RAND_MAX) < THRESHOLD;
+                count += grid[i * grid_size + j];
             }
         }
         cout << "Number of non zero elements: " << count << endl;
-        cout << "Percent: " << (float)count / (float)(N * N) << endl;
+        cout << "Percent: " << (float)count / (float)(grid_size * grid_size) << endl;
     }
 
-    void save_grid(bool *X, size_t N) {
-        FILE *file;
-        char filename[20];
-        cout << filename << "table " << N << "x" << N << endl;
-        cout << "Saving table in file " << filename << endl;
-        file = fopen(filename, "w+");
-        fwrite(X, sizeof(int), N * N, file);
-        fclose(file);
+    void save_grid(const bool *grid, size_t grid_size) {
+        string filename =
+            "grid_table_" + to_string(grid_size) + "x" + to_string(grid_size) + ".bin";
+
+        cout << "Saving table " << grid_size << "x" << grid_size << " in file " << filename << endl;
+
+        ofstream file(filename, ios::binary);
+        if (!file) {
+            cerr << "Failed to open file: " << filename << endl;
+            return;
+        }
+
+        file.write(reinterpret_cast<const char *>(grid), grid_size * grid_size * sizeof(bool)); // NOLINT
+        file.close();
     }
 
-    void save_grid_to_png(bool *X, int gridSize, int iteration) {
+    void save_grid_to_png(const bool *grid, size_t grid_size, int iteration) {
         // Create output buffer
-        unique_ptr<unsigned char[]> image(new unsigned char[gridSize * gridSize]);
-        for (int i = 0; i < gridSize * gridSize; i++) {
-            image[i] = X[i] ? 255 : 0;
+        unique_ptr<unsigned char[]> image(new unsigned char[grid_size * grid_size]);
+        for (int i = 0; i < grid_size * grid_size; i++) {
+            image[i] = grid[i] ? 255 : 0;
         }
 
         // Ensure output directory exists
-        fs::path outputDir = "output";
-        fs::create_directories(outputDir); // No-op if it already exists
+        const fs::path output_dir = "output";
+        fs::create_directories(output_dir); // No-op if it already exists
 
         // Construct full path: output/gol_<iteration>.png
-        fs::path filename = outputDir / std::format("gol_{}.png", iteration);
+        fs::path filename = output_dir / std::format("gol_{}.png", iteration);
         // Or use: fmt::format if you don't have C++20
 
-        stbi_write_png(filename.string().c_str(), gridSize, gridSize, 1, image.get(), gridSize);
+        // NOLINTNEXTLINE(cppcoreguidelines-narrowing-conversions,bugprone-narrowing-conversions)
+        stbi_write_png(filename.string().c_str(), grid_size, grid_size, 1, image.get(), grid_size);
     }
 } // namespace utils
