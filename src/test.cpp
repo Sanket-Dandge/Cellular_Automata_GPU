@@ -24,6 +24,7 @@ int main(int argc, char *argv[]) {
 
     auto config = AutomatonConfiguration(configFile);
     GameOfLife life(config);
+    utils::save_grid_to_png(life.grid.get(), life.getGridSize(), 1);
 
     for (int i = 1; i < 10; i++) {
         int iters = 2u << i;

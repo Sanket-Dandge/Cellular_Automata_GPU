@@ -1,16 +1,19 @@
 #include "utils.h"
+#include <format>
 #include <memory>
 #define STB_IMAGE_WRITE_IMPLEMENTATION
 #include "stb_image_write.h"
 #include <cstdio>
 #include <cstdlib>
 #include <ctime>
+#include <filesystem>
 #include <fstream>
 #include <iostream>
 #include <string>
 #include <vector>
 
 using namespace std;
+namespace fs = std::filesystem;
 
 namespace utils {
 
@@ -40,18 +43,20 @@ namespace utils {
     }
 
     void save_grid_to_png(bool *X, int gridSize, int iteration) {
-        // Create an 8-bit grayscale buffer (1 byte per pixel)
+        // Create output buffer
         unique_ptr<unsigned char[]> image(new unsigned char[gridSize * gridSize]);
-
         for (int i = 0; i < gridSize * gridSize; i++) {
             image[i] = X[i] ? 255 : 0;
         }
 
-        // Construct filename like "gol_42.png"
-        char filename[64];
-        snprintf(filename, sizeof(filename), "gol_%d.png", iteration);
+        // Ensure output directory exists
+        fs::path outputDir = "output";
+        fs::create_directories(outputDir); // No-op if it already exists
 
-        // Write PNG: width, height, channels = 1 (grayscale), stride = width * 1 byte
-        stbi_write_png(filename, gridSize, gridSize, 1, image.get(), gridSize);
+        // Construct full path: output/gol_<iteration>.png
+        fs::path filename = outputDir / std::format("gol_{}.png", iteration);
+        // Or use: fmt::format if you don't have C++20
+
+        stbi_write_png(filename.string().c_str(), gridSize, gridSize, 1, image.get(), gridSize);
     }
 } // namespace utils
