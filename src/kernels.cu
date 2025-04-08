@@ -1,7 +1,18 @@
 #include "kernels.cuh"
 #include "kernels.hpp"
 #include <cstddef>
+#include <cstdio>
 #include <cuda.h>
+#include <stdio.h>
+
+#define CUDA_CHECK(call)                                                                           \
+    {                                                                                              \
+        cudaError_t err = (call);                                                                  \
+        if (err != cudaSuccess) {                                                                  \
+            printf("CUDA Error: %s at %s: %d\n", cudaGetErrorString(err), __FILE__, __LINE__);     \
+            exit(EXIT_FAILURE);                                                                    \
+        }                                                                                          \
+    }
 
 namespace kernels {
     __host__ __device__ int countNeighbors(bool *currentGrid, int col, int row, int gridSize) {
@@ -18,15 +29,20 @@ namespace kernels {
     }
 
     __global__ void computeNextGenKernel(bool *currentGrid, bool *nextGrid, int N) {
-        int col = blockIdx.x * blockDim.x + threadIdx.x + 1;
-        int row = blockIdx.y * blockDim.y + threadIdx.y + 1;
-        if ((col < N + 1) && (row < N + 1)) {
-            size_t rowOffset = row * (N + 2);
-            int index = rowOffset + col;
-            int livingNeighbors = kernels::countNeighbors(currentGrid, col, rowOffset, N + 2);
-            nextGrid[index] =
-                livingNeighbors == 3 || (livingNeighbors == 2 && currentGrid[index]) ? 1 : 0;
+        int col = blockIdx.x * blockDim.x + threadIdx.x;
+        int row = blockIdx.y * blockDim.y + threadIdx.y;
+
+        if (col == 0 || col == N - 1 || row == 0 || row == N - 1) {
+            return;
         }
+        size_t rowOffset = row * N;
+        int index = rowOffset + col;
+        if (index >= 1024 * 1024) {
+            printf("%d,%d\n", col, row);
+        }
+        int livingNeighbors = kernels::countNeighbors(currentGrid, col, row, N);
+        nextGrid[index] =
+            livingNeighbors == 3 || (livingNeighbors == 2 && currentGrid[index]) ? 1 : 0;
         return;
     }
 
@@ -58,18 +74,22 @@ void computeNextGen(bool *currentGrid, bool *nextGrid, int N) {
     // Allocate device memory
     bool *d_current, *d_next;
     int totalSize = N * N;
-    cudaMalloc(&d_current, totalSize * sizeof(bool));
-    cudaMalloc(&d_next, totalSize * sizeof(bool));
+    CUDA_CHECK(cudaMalloc(&d_current, totalSize * sizeof(bool)));
+    CUDA_CHECK(cudaMalloc(&d_next, totalSize * sizeof(bool)));
 
     // Copy data to device
-    cudaMemcpy(d_current, currentGrid, totalSize * sizeof(bool), cudaMemcpyHostToDevice);
+    CUDA_CHECK(
+        cudaMemcpy(d_current, currentGrid, totalSize * sizeof(bool), cudaMemcpyHostToDevice));
 
     // Launch kernel
-    dim3 blockSize(16, 16);
+    dim3 blockSize(32, 32);
     dim3 gridSize((N + blockSize.x - 1) / blockSize.x, (N + blockSize.y - 1) / blockSize.y);
     kernels::computeNextGenKernel<<<gridSize, blockSize>>>(d_current, d_next, N);
+    CUDA_CHECK(cudaGetLastError());
     cudaDeviceSynchronize();
 
     // Copy result back to host
-    cudaMemcpy(nextGrid, d_next, totalSize * sizeof(bool), cudaMemcpyDeviceToHost);
+    CUDA_CHECK(cudaMemcpy(nextGrid, d_next, totalSize * sizeof(bool), cudaMemcpyDeviceToHost));
+    CUDA_CHECK(cudaFree(d_current));
+    CUDA_CHECK(cudaFree(d_next));
 }
