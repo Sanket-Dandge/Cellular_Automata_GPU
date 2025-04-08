@@ -8,6 +8,7 @@
 #include <regex>
 #include <sstream>
 #include <string>
+#include <unordered_set>
 #include <vector>
 
 namespace fs = std::filesystem;
@@ -18,30 +19,28 @@ GameOfLife::GameOfLife() {
 }
 GameOfLife::GameOfLife(shared_ptr<bool[]> grid) : grid(grid) {}
 
-GameOfLife::GameOfLife(const string &filename) {
-    auto config = parse_config(filename);
-
-    string gridFile = config.contains("boardFileName") ? config["boardFileName"] : "random";
-    auto sizeConfig = config.contains("size") ? config["size"] : "nextPower";
-    if (sizeConfig == "nextPower") {
-        if (gridFile == "random") {
+GameOfLife::GameOfLife(const AutomatonConfiguration &config) {
+    if (config.size == "nextPower") {
+        if (config.gridFile == "random") {
             cerr << "cannot use nextPower with random" << endl;
             exit(1);
         } else {
-            auto patternSize = get_rle_size(gridFile);
+            auto patternSize = get_rle_size(config.gridFile);
             gridSize = bit_ceil(max(max(patternSize.first, patternSize.second), 32u));
         }
     } else {
-        gridSize = stoi(config["size"]);
+        gridSize = stoi(config.size);
     }
+
     grid = shared_ptr<bool[]>(new bool[gridSize * gridSize]);
 
-    if (gridFile == "random") {
+    if (config.gridFile == "random") {
         utils::generate_random_grid(grid.get(), gridSize);
     } else {
-        load_grid_from_file(gridFile);
+        load_grid_from_file(config.gridFile);
     }
 }
+GameOfLife::GameOfLife(const string &filename) : GameOfLife(AutomatonConfiguration(filename)) {}
 
 void GameOfLife::run(int iterations, int snapshotInterval) {
     // TODO: optimize if possible
@@ -63,7 +62,23 @@ void GameOfLife::run(int iterations, int snapshotInterval) {
     copy(grid1.get(), grid1.get() + gridSize * gridSize, grid.get());
 }
 
-unordered_map<string, string> GameOfLife::parse_config(const string &filename) {
+AutomatonConfiguration::AutomatonConfiguration(const fs::path &filename) {
+    auto config = parse(filename);
+
+    gridFile = config.contains("gridFile") ? config["gridFile"] : "random";
+    size = config.contains("size") ? config["size"] : "nextPower";
+    string generationsConfig = config.contains("generations") ? config["generations"] : "1000";
+    generations = stoi(generationsConfig);
+
+    const unordered_set<string> allowedKeys = {"gridFile", "size", "generations"};
+    for (auto kv : config) {
+        if (!allowedKeys.contains(kv.first)) {
+            cerr << "Unknown key found in configuration `" << kv.first << "'";
+        }
+    }
+}
+
+unordered_map<string, string> AutomatonConfiguration::parse(const fs::path &filename) {
     unordered_map<string, string> config;
     ifstream file(filename);
     string line;
@@ -83,7 +98,6 @@ unordered_map<string, string> GameOfLife::parse_config(const string &filename) {
         iss >> key >> value;
         if (!key.empty() && !value.empty()) {
             config[key] = value;
-            cout << "Reading kv pair: " << key << " = " << value << endl;
         }
     }
 
