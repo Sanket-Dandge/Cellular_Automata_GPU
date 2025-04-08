@@ -5,8 +5,8 @@
 
 class GameOfLife {
   public:
-    GameOfLife: left(-1.0f), right(1.0f), top(1.0f), bottom(-1.0f) {}
-    GameOfLife(int argc, char** argv);
+    GameOfLife : left(-1.0f), right(1.0f), top(1.0f), bottom(-1.0f) {}
+    GameOfLife(int argc, char **argv);
 };
 
 #endif
