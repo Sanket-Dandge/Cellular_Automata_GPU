@@ -12,8 +12,7 @@ namespace kernels {
 
   __global__ void simpleGhostNextGenerationKernel(bool* currentGrid, bool* nextGrid, int N) {
     int col = blockIdx.x * blockDim.x + threadIdx.x + 1;
-    int row = blockIdx.y * blockDim.y + threadIdx.y + 1;
-    if ((col < N + 1) && (row < N + 1)) {
+    int row = blockIdx.y * blockDim.y + threadIdx.y + 1; if ((col < N + 1) && (row < N + 1)) {
       size_t up = (row - 1) * (N + 2);
       size_t center = row * (N + 2);
       size_t down = (row + 1) * (N + 2);
