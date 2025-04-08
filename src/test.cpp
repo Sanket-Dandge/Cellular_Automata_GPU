@@ -26,9 +26,9 @@ int main(int argc, char *argv[]) {
     GameOfLife life(config);
 
     for (int i = 1; i < 10; i++) {
-        int iters = 1024u << i;
+        int iters = 2u << i;
         ScopedTimer __t(format("Iterations-{}", iters));
-        life.run(iters, 10);
+        life.run(iters, 1);
     }
 
     return 0;

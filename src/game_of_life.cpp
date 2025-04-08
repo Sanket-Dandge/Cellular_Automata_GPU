@@ -21,11 +21,11 @@ GameOfLife::GameOfLife(shared_ptr<bool[]> grid) : grid(grid) {}
 
 GameOfLife::GameOfLife(const AutomatonConfiguration &config) {
     if (config.size == "nextPower") {
-        if (config.gridFile == "random") {
+        if (config.generateRandom) {
             cerr << "cannot use nextPower with random" << endl;
             exit(1);
         } else {
-            auto patternSize = get_rle_size(config.gridFile);
+            auto patternSize = get_rle_size(config.gridFile->string());
             gridSize = bit_ceil(max(max(patternSize.first, patternSize.second), 32u));
         }
     } else {
@@ -34,10 +34,10 @@ GameOfLife::GameOfLife(const AutomatonConfiguration &config) {
 
     grid = shared_ptr<bool[]>(new bool[gridSize * gridSize]);
 
-    if (config.gridFile == "random") {
+    if (config.generateRandom) {
         utils::generate_random_grid(grid.get(), gridSize);
     } else {
-        load_grid_from_file(config.gridFile);
+        load_grid_from_file(config.gridFile->string());
     }
 }
 GameOfLife::GameOfLife(const string &filename) : GameOfLife(AutomatonConfiguration(filename)) {}
@@ -65,7 +65,18 @@ void GameOfLife::run(int iterations, int snapshotInterval) {
 AutomatonConfiguration::AutomatonConfiguration(const fs::path &filename) {
     auto config = parse(filename);
 
-    gridFile = config.contains("gridFile") ? config["gridFile"] : "random";
+    // Resolve gridFile path
+    if (config.contains("gridFile") && config["gridFile"] != "random") {
+        gridFile = fs::path(config["gridFile"]);
+
+        // Make it relative to config file location if it's not absolute
+        if (gridFile && !gridFile->is_absolute()) {
+            gridFile = filename.parent_path() / *gridFile;
+        }
+    } else {
+        gridFile = nullopt;
+        generateRandom = true;
+    }
     size = config.contains("size") ? config["size"] : "nextPower";
     string generationsConfig = config.contains("generations") ? config["generations"] : "1000";
     generations = stoi(generationsConfig);

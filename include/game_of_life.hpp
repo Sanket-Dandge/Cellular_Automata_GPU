@@ -4,6 +4,7 @@
 #include "utils.h"
 #include <filesystem>
 #include <memory>
+#include <optional>
 #include <unordered_map>
 
 #define GRID_SIZE 1024
@@ -16,7 +17,8 @@ class AutomatonConfiguration {
     unordered_map<string, string> parse(const fs::path &filename);
 
   public:
-    string gridFile;
+    optional<fs::path> gridFile;
+    bool generateRandom;
     string size;
     int generations;
 
