@@ -1,0 +1,5 @@
+#C Belousov–Zhabotinsky reaction inspired pattern
+#C Centered seed for ripple/spiral wave formation
+#C Requires at least 8 states (n >= 8) and threshold = 1
+x = 100, y = 100, states = 8
+50$48A$47BAB$48A$!

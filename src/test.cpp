@@ -1,4 +1,5 @@
 #include "game_of_life.hpp"
+#include "cyclic_ca.hpp"
 #include <chrono>
 #include <cstdio>
 #include <iostream>
@@ -23,15 +24,15 @@ int main(int argc, char *argv[]) {
 
     string configFile = argv[1];
 
-    auto config = AutomatonConfiguration(configFile);
-    GameOfLife life(config);
+    auto config = AutomateConfiguration(configFile);
+    CyclicCA life(config);
     utils::save_grid_to_png(life.grid.get(), life.getGridSize(), 1);
 
     cout << life.getGridSize() << endl;
     // for (int i = 1; i < 10; i++) {
     {int iters = 1000;
     ScopedTimer __t(format("Iterations-{}", iters));
-    life.run(iters, 1024);}
+    life.run(iters, 1);}
     // }
 
 

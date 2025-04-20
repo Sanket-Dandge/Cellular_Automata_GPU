@@ -1,0 +1,5 @@
+#C Cyclic Cellular Automaton - Central Seed for 500x500 Grid
+#C N = 6 states, Threshold = 1, von Neumann Neighborhood
+#C Initial seed near center
+x = 500, y = 500, rule = cyclic6-vn-1
+249b1o$248b2o$247bo$248b2o$249bo!

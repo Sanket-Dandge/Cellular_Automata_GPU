@@ -1,0 +1,9 @@
+#C Cyclic Cellular Automaton - Simple Waves
+#C N = 6 states, threshold = 1, von Neumann neighborhood
+#C Neighborhood: von Neumann
+#C Radius: 1
+#C Threshold: 1
+#C States: 6
+#C Initial pattern: small seed to trigger waves
+x = 5, y = 5, rule = cyclic6-vn-1
+1o2b1o$2o3b$3b2o$1bo2b$2b1o!
