@@ -1,3 +1,3 @@
 size nextPower
-gridFile ../patterns/cyclic-ca-simpler-waves.rle
+gridFile ../patterns/blockandglider.rle
 generations 1000

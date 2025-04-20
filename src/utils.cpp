@@ -18,26 +18,27 @@ using namespace std;
 namespace fs = std::filesystem;
 
 static const unsigned char STATE_COLORS[15][3] = {
-    {255, 0, 0},     // STATE1 - Red
-    {0, 255, 0},     // STATE2 - Green
-    {0, 0, 255},     // STATE3 - Blue
-    {255, 255, 0},   // STATE4 - Yellow
-    {255, 0, 255},   // STATE5 - Magenta
-    {0, 255, 255},   // STATE6 - Cyan
-    {128, 0, 0},     // STATE7 - Maroon
-    {0, 128, 0},     // STATE8 - Dark Green
-    {0, 0, 128},     // STATE9 - Navy
-    {128, 128, 0},   // STATE10 - Olive
-    {128, 0, 128},   // STATE11 - Purple
-    {0, 128, 128},   // STATE12 - Teal
-    {192, 192, 192}, // STATE13 - Silver
-    {255, 165, 0},   // STATE14 - Orange
-    {0, 0, 0}        // STATE15 - Black
+    {177, 25, 251},  // STATE1
+    {177, 25, 251},  // STATE2
+    {165, 30, 233},  // STATE3
+    {153, 38, 215},  // STATE4
+    {139, 51, 196},  // STATE5
+    {127, 64, 180},  // STATE6
+    {115, 78, 162},  // STATE7
+    {103, 93, 144},  // STATE8
+    {91, 108, 127},  // STATE9
+    {79, 124, 109},  // STATE10
+    {68, 138, 92},   // STATE11
+    {58, 153, 76},   // STATE12
+    {50, 169, 63},   // STATE13
+    {45, 185, 50},   // STATE14
+    {42, 200, 42}    // STATE15
 };
 
 namespace utils {
 
-    void generate_random_grid(int *X, size_t N, int seed) {
+    // TODO: Need to change bool to uint8 for using for other CA models for all of them
+    void generate_random_grid(bool *grid, size_t grid_size, int seed) {
         cout << "Initializing random grid" << endl;
         srand(seed);
         int count = 0;
@@ -68,13 +69,7 @@ namespace utils {
         file.close();
     }
 
-    void save_grid_to_png(const bool *grid, size_t grid_size, int iteration) {
-        // Create output buffer
-        unique_ptr<unsigned char[]> image(new unsigned char[grid_size * grid_size]);
-        for (int i = 0; i < grid_size * grid_size; i++) {
-            image[i] = grid[i] ? 255 : 0;
-
-    void generate_rgb(int width, int height, int *grid, char* rgb) {
+    void generate_rgb(int width, int height, bool *grid, char* rgb) {
         for (int i = 0; i < height; i++) {
             for (int j = 0; j < width; j++) {
                 int index = i * width + j;
@@ -86,13 +81,10 @@ namespace utils {
         }
     }
 
-    void save_grid_to_png(int *X, int gridSize, int iteration) {
+    void save_grid_to_png(bool *X, int gridSize, int iteration) {
         int channels = 3;
         // Create output buffer
         unique_ptr<unsigned char[]> image(new unsigned char[gridSize * gridSize * channels]);
-        // for (int i = 0; i < gridSize * gridSize; i++) {
-        //     image[i] = X[i] ? 255 : 0;
-        // }
         generate_rgb(gridSize, gridSize, X, reinterpret_cast<char*>(image.get()));
 
         // Ensure output directory exists
@@ -101,7 +93,6 @@ namespace utils {
 
         // Construct full path: output/gol_<iteration>.png
         fs::path filename = output_dir / std::format("gol_{}.png", iteration);
-        // Or use: fmt::format if you don't have C++20
 
         stbi_write_png(filename.string().c_str(), gridSize, gridSize, channels, image.get(), gridSize * channels);
     }

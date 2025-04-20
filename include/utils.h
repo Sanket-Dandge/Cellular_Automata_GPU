@@ -9,9 +9,9 @@
 
 namespace utils {
     void read_configuration_from_file(int *X, std::string filename, size_t N);
-    void generate_random_grid(int *X, size_t N, int seed = time(NULL));
+    void generate_random_grid(bool *grid, size_t grid_size, int seed = time(NULL));
     void save_grid(int *X, size_t N);
-    void save_grid_to_png(int *X, int gridSize, int iteration);
+    void save_grid_to_png(bool *X, int gridSize, int iteration);
     void generate_rgb(int width, int height, int* grid, char* rgb);
 } // namespace utils
 

@@ -42,7 +42,7 @@ namespace kernels {
         return;
     }
 
-    __host__ __device__ bool cyclicIsNeighbors(int *currentGrid, int col, int row, int gridSize, int index) {
+    __host__ __device__ bool cyclic_check_neighbors(int *currentGrid, int col, int row, int gridSize, int index) {
         int leftCol = (col - 1 + gridSize) % gridSize;
         int rightCol = (col + 1) % gridSize;
         int rowOffset = row * gridSize;
@@ -59,7 +59,7 @@ namespace kernels {
     }
 
 
-    __global__ void cyclicComputeNextGenKernel(int *currentGrid, int *nextGrid, int N) {
+    __global__ void cyclic_compute_next_gen_kernel(int *currentGrid, int *nextGrid, int N) {
         int col = blockIdx.x * blockDim.x + threadIdx.x;
         int row = blockIdx.y * blockDim.y + threadIdx.y;
 
@@ -68,35 +68,10 @@ namespace kernels {
         if (index >= N * N) {
             printf("%d,%d\n", col, row);
         }
-        bool nextStateNeighbor = kernels::cyclicIsNeighbors(currentGrid, col, row, N, index);
+        bool nextStateNeighbor = kernels::cyclic_check_neighbors(currentGrid, col, row, N, index);
         nextGrid[index] = nextStateNeighbor ? ((currentGrid[index] + 1) % 15) : currentGrid[index];
         return;
     }
-
-    /*
-    __global__ void updateGhostRows(bool *grid, int N, size_t pitch) {
-        int x = blockIdx.x * blockDim.x + threadIdx.x + 1;
-        if (x < N - 1) {
-            grid[toLinearIndex(N - 1, x, pitch)] = grid[toLinearIndex(1, x, pitch)];
-            grid[toLinearIndex(0, x, pitch)] = grid[toLinearIndex(N - 2, x, pitch)];
-        }
-    }
-
-    __global__ void updateGhostCols(bool *grid, int N, int pitch) {
-        int y = blockIdx.y * blockDim.y + threadIdx.y + 1;
-        if (y < N - 1) {
-            grid[toLinearIndex(y, N - 1, pitch)] = grid[toLinearIndex(y, 1, pitch)];
-            grid[toLinearIndex(y, 0, pitch)] = grid[toLinearIndex(y, N - 2, pitch)];
-        }
-    }
-
-    __global__ void updateGhostCorners(bool *grid, int N, int pitch) {
-        grid[toLinearIndex(0, 0, pitch)] = grid[toLinearIndex(N - 2, N - 2, pitch)];
-        grid[toLinearIndex(N - 1, N - 1, pitch)] = grid[toLinearIndex(1, 1, pitch)];
-        grid[toLinearIndex(0, N - 1, pitch)] = grid[toLinearIndex(N - 2, 1, pitch)];
-        grid[toLinearIndex(N - 1, 0, pitch)] = grid[toLinearIndex(1, N - 2, pitch)];
-    }
-    */
 } // namespace kernels
 
 void compute_next_gen(bool *current_grid, bool *next_grid, size_t ca_grid_size) {
@@ -123,7 +98,7 @@ void compute_next_gen(bool *current_grid, bool *next_grid, size_t ca_grid_size) 
     CUDA_CHECK(cudaFree(d_next));
 }
 
-void cyclicComputeNextGen(int *currentGrid, int *nextGrid, int N) {
+void cyclic_compute_next_gen(int *currentGrid, int *nextGrid, int N) {
     // Allocate device memory
     int *d_current, *d_next;
     int totalSize = N * N;
@@ -137,7 +112,7 @@ void cyclicComputeNextGen(int *currentGrid, int *nextGrid, int N) {
     // Launch kernel
     dim3 blockSize(32, 32);
     dim3 gridSize((N + blockSize.x - 1) / blockSize.x, (N + blockSize.y - 1) / blockSize.y);
-    kernels::cyclicComputeNextGenKernel<<<gridSize, blockSize>>>(d_current, d_next, N);
+    kernels::cyclic_compute_next_gen_kernel<<<gridSize, blockSize>>>(d_current, d_next, N);
     CUDA_CHECK(cudaGetLastError());
     cudaDeviceSynchronize();
 

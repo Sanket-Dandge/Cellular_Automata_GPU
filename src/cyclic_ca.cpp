@@ -54,7 +54,7 @@ void CyclicCA::run(int iterations, int snapshotInterval) {
     copy(grid.get(), grid.get() + gridSize * gridSize, grid1.get());
 
     for (int i = 0; i < iterations; i++) {
-        cyclicComputeNextGen(grid1.get(), grid2.get(), gridSize);
+        cyclic_compute_next_gen(grid1.get(), grid2.get(), gridSize);
         if (i % snapshotInterval == 0) {
             utils::save_grid_to_png(grid2.get(), gridSize, i);
         }
