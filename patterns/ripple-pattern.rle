@@ -1,0 +1,4 @@
+#C Simple ripple starter pattern for CCA
+#C Designed for 8 states (0–7)
+x = 10, y = 10, states = 8
+10$3A2B2A$3B1C1B$3A2B2A$10$!

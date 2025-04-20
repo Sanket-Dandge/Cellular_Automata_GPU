@@ -1,3 +1,3 @@
 size nextPower
-gridFile ../patterns/toad.rle
+gridFile ../patterns/cyclic-ca-simpler-waves.rle
 generations 1000

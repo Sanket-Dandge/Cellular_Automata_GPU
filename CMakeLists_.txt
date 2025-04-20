@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.18)
-project(cyclic_ca LANGUAGES CXX CUDA)
+project(game_of_life LANGUAGES CXX CUDA)
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -22,7 +22,7 @@ target_link_libraries(${PROJECT_NAME}_kernels
 )
 
 add_library(${PROJECT_NAME}_gol
-  src/cyclic_ca.cpp)
+  src/game_of_life.cpp)
 target_link_libraries(${PROJECT_NAME}_gol
   ${PROJECT_NAME}_kernels
   ${PROJECT_NAME}_utils
