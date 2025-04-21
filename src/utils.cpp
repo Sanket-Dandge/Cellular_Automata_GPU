@@ -1,4 +1,5 @@
 #include "utils.h"
+#include <complex>
 #include <cstdint>
 #include <format>
 #include <memory>
@@ -17,43 +18,57 @@
 using namespace std;
 namespace fs = std::filesystem;
 
-static const unsigned char STATE_COLORS[15][3] = {
-    {177, 25, 251},  // STATE1
-    {177, 25, 251},  // STATE2
-    {165, 30, 233},  // STATE3
-    {153, 38, 215},  // STATE4
-    {139, 51, 196},  // STATE5
-    {127, 64, 180},  // STATE6
-    {115, 78, 162},  // STATE7
-    {103, 93, 144},  // STATE8
-    {91, 108, 127},  // STATE9
-    {79, 124, 109},  // STATE10
-    {68, 138, 92},   // STATE11
-    {58, 153, 76},   // STATE12
-    {50, 169, 63},   // STATE13
-    {45, 185, 50},   // STATE14
-    {42, 200, 42}    // STATE15
+const unsigned char STATE_COLORS[15][3] = {
+    {177,  25, 251},  // STATE1
+    {177,  25, 251},  // STATE2
+    {165,  30, 233},  // STATE3
+    {153,  38, 215},  // STATE4
+    {139,  51, 196},  // STATE5
+    {127,  64, 180},  // STATE6
+    {115,  78, 162},  // STATE7
+    {103,  93, 144},  // STATE8
+    { 91, 108, 127},  // STATE9
+    { 79, 124, 109},  // STATE10
+    { 68, 138,  92},  // STATE11
+    { 58, 153,  76},  // STATE12
+    { 50, 169,  63},  // STATE13
+    { 45, 185,  50},  // STATE14
+    { 42, 200,  42}   // STATE15
 };
 
 namespace utils {
 
-    // TODO: Need to change bool to uint8 for using for other CA models for all of them
-    void generate_random_grid(bool *grid, size_t grid_size, int seed) {
+    void generate_random_grid(uint8_t *grid, size_t grid_size, int seed) {
         cout << "Initializing random grid" << endl;
         srand(seed);
         int count = 0;
 
         for (size_t i = 0; i < grid_size; i++) {
             for (size_t j = 0; j < grid_size; j++) {
-                grid[i * grid_size + j] = ((float)rand() / (float)RAND_MAX) < THRESHOLD;
-                count += grid[i * grid_size + j];
+                bool normalize = ((float)rand() / (float)RAND_MAX) < THRESHOLD;
+                grid[i * grid_size + j] = static_cast<uint8_t>(normalize);
+                count += normalize;
             }
         }
         cout << "Number of non zero elements: " << count << endl;
-        cout << "Percent: " << (float)count / (float)(grid_size * grid_size) << endl;
+        cout << "Percent: " << static_cast<float>(count) / (float)(grid_size * grid_size) << endl;
     }
 
-    void save_grid(const bool *grid, size_t grid_size) {
+    float r4_uniform_01(int *seed) {
+        const int i4_huge = 2147483647;
+        int k;
+        float r;
+        
+        k = *seed / 127773;
+        *seed = 16807 * ( *seed - k * 127773 ) - k * 2836;
+        if ( *seed < 0 ) {
+            *seed = *seed + i4_huge;
+        }
+        r = ( float ) ( *seed ) * 4.656612875E-10;
+        return r;
+    }
+
+    void save_grid(uint8_t *grid, size_t grid_size) {
         string filename =
             "grid_table_" + to_string(grid_size) + "x" + to_string(grid_size) + ".bin";
 
@@ -65,35 +80,33 @@ namespace utils {
             return;
         }
 
-        file.write(reinterpret_cast<const char *>(grid), grid_size * grid_size * sizeof(bool)); // NOLINT
+        file.write(reinterpret_cast<const char *>(grid), grid_size * grid_size * sizeof(uint8_t)); // NOLINT
         file.close();
     }
 
-    void generate_rgb(int width, int height, bool *grid, char* rgb) {
-        for (int i = 0; i < height; i++) {
-            for (int j = 0; j < width; j++) {
+    char* generate_rgb(int width, int height, uint8_t* grid, char* rgb) {
+        for (int i = 0; i < height; ++i) {
+            for (int j = 0; j < width; ++j) {
                 int index = i * width + j;
-                int color_index = grid[index] - 1;
+                int color_index = grid[index];
                 rgb[3 * index + 0] = STATE_COLORS[color_index][0];
                 rgb[3 * index + 1] = STATE_COLORS[color_index][1];
                 rgb[3 * index + 2] = STATE_COLORS[color_index][2];
             }
         }
+        return rgb;
     }
 
-    void save_grid_to_png(bool *X, int gridSize, int iteration) {
+    void save_grid_to_png(uint8_t* X, int grid_size, int iteration) {
         int channels = 3;
-        // Create output buffer
-        unique_ptr<unsigned char[]> image(new unsigned char[gridSize * gridSize * channels]);
-        generate_rgb(gridSize, gridSize, X, reinterpret_cast<char*>(image.get()));
+        unique_ptr<uint8_t[]> image(new uint8_t[grid_size * grid_size * channels]);
+        generate_rgb(grid_size, grid_size, X, reinterpret_cast<char*>(image.get()));
 
-        // Ensure output directory exists
         const fs::path output_dir = "output";
-        fs::create_directories(output_dir); // No-op if it already exists
+        fs::create_directories(output_dir);
 
-        // Construct full path: output/gol_<iteration>.png
         fs::path filename = output_dir / std::format("gol_{}.png", iteration);
 
-        stbi_write_png(filename.string().c_str(), gridSize, gridSize, channels, image.get(), gridSize * channels);
+        stbi_write_png(filename.string().c_str(), grid_size, grid_size, channels, image.get(), grid_size * channels);
     }
 } // namespace utils

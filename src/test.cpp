@@ -26,9 +26,9 @@ int main(int argc, char *argv[]) {
 
     string config_file = argv[1];
 
-    auto config = AutomatonConfiguration(config_file);
-    GameOfLife life(config);
-    utils::save_grid_to_png(life.grid.get(), life.get_grid_size(), 1);
+    // auto config = AutomatonConfiguration(config_file);
+    CyclicCA life;
+    // utils::save_grid_to_png(life.grid.get(), life.get_grid_size(), 1);
     cout << life.get_grid_size() << endl;
     // for (int i = 1; i < 10; i++) {
     {int iters = 1000;

@@ -1,6 +1,8 @@
 #include "kernels.cuh"
 #include "kernels.hpp"
+#include "cyclic_ca.hpp"
 #include <cstddef>
+#include <cstdint>
 #include <cstdio>
 #include <cuda.h>
 
@@ -42,13 +44,13 @@ namespace kernels {
         return;
     }
 
-    __host__ __device__ bool cyclic_check_neighbors(int *currentGrid, int col, int row, int gridSize, int index) {
-        int leftCol = (col - 1 + gridSize) % gridSize;
-        int rightCol = (col + 1) % gridSize;
-        int rowOffset = row * gridSize;
-        int topRowOffset = ((row - 1 + gridSize) % gridSize) * gridSize;
-        int bottomRowOffset = ((row + 1) % gridSize) * gridSize;
-        int nextState = (currentGrid[index] + 1) % 15;
+    __host__ __device__ bool cyclic_check_neighbors(uint8_t *currentGrid, int col, int row, int grid_size, int index) {
+        int leftCol = (col - 1 + grid_size) % grid_size;
+        int rightCol = (col + 1) % grid_size;
+        int rowOffset = row * grid_size;
+        int topRowOffset = ((row - 1 + grid_size) % grid_size) * grid_size;
+        int bottomRowOffset = ((row + 1) % grid_size) * grid_size;
+        int nextState = (currentGrid[index] % 15) + 1;
 
         return (
             ( currentGrid[col + topRowOffset] == nextState )
@@ -59,17 +61,50 @@ namespace kernels {
     }
 
 
-    __global__ void cyclic_compute_next_gen_kernel(int *currentGrid, int *nextGrid, int N) {
+    __global__ void cyclic_compute_next_gen_kernel(uint8_t *currentGrid, uint8_t *nextGrid, int N) {
         int col = blockIdx.x * blockDim.x + threadIdx.x;
         int row = blockIdx.y * blockDim.y + threadIdx.y;
 
         size_t rowOffset = row * N;
         int index = rowOffset + col;
+        int current_cell = currentGrid[index];
         if (index >= N * N) {
             printf("%d,%d\n", col, row);
         }
         bool nextStateNeighbor = kernels::cyclic_check_neighbors(currentGrid, col, row, N, index);
-        nextGrid[index] = nextStateNeighbor ? ((currentGrid[index] + 1) % 15) : currentGrid[index];
+        if (current_cell == STATE1 && nextStateNeighbor) {
+            nextGrid[index] = STATE2;
+        } else if (current_cell == STATE2 && nextStateNeighbor) {
+            nextGrid[index] = STATE3;
+        } else if (current_cell == STATE3 && nextStateNeighbor) {
+            nextGrid[index] = STATE4;
+        } else if (current_cell == STATE4 && nextStateNeighbor) {
+            nextGrid[index] = STATE5;
+        } else if (current_cell == STATE5 && nextStateNeighbor) {
+            nextGrid[index] = STATE6;
+        } else if (current_cell == STATE6 && nextStateNeighbor) {
+            nextGrid[index] = STATE7;
+        } else if (current_cell == STATE7 && nextStateNeighbor) {
+            nextGrid[index] = STATE8;
+        } else if (current_cell == STATE8 && nextStateNeighbor) {
+            nextGrid[index] = STATE9;
+        } else if (current_cell == STATE9 && nextStateNeighbor) {
+            nextGrid[index] = STATE10;
+        } else if (current_cell == STATE10 && nextStateNeighbor) {
+            nextGrid[index] = STATE11;
+        } else if (current_cell == STATE11 && nextStateNeighbor) {
+            nextGrid[index] = STATE12;
+        } else if (current_cell == STATE12 && nextStateNeighbor) {
+            nextGrid[index] = STATE13;
+        } else if (current_cell == STATE13 && nextStateNeighbor) {
+            nextGrid[index] = STATE14;
+        } else if (current_cell == STATE14 && nextStateNeighbor) {
+            nextGrid[index] = STATE15;
+        } else if (current_cell == STATE15 && nextStateNeighbor) {
+            nextGrid[index] = STATE1;
+        } else {
+            nextGrid[index] = current_cell;
+        }
         return;
     }
 } // namespace kernels
@@ -98,16 +133,16 @@ void compute_next_gen(bool *current_grid, bool *next_grid, size_t ca_grid_size) 
     CUDA_CHECK(cudaFree(d_next));
 }
 
-void cyclic_compute_next_gen(int *currentGrid, int *nextGrid, int N) {
+void cyclic_compute_next_gen(uint8_t *currentGrid, uint8_t *nextGrid, int N) {
     // Allocate device memory
-    int *d_current, *d_next;
+    uint8_t *d_current, *d_next;
     int totalSize = N * N;
-    CUDA_CHECK(cudaMalloc(&d_current, totalSize * sizeof(int)));
-    CUDA_CHECK(cudaMalloc(&d_next, totalSize * sizeof(int)));
+    CUDA_CHECK(cudaMalloc(&d_current, totalSize * sizeof(uint8_t)));
+    CUDA_CHECK(cudaMalloc(&d_next, totalSize * sizeof(uint8_t)));
 
     // Copy data to device
     CUDA_CHECK(
-        cudaMemcpy(d_current, currentGrid, totalSize * sizeof(int), cudaMemcpyHostToDevice));
+        cudaMemcpy(d_current, currentGrid, totalSize * sizeof(uint8_t), cudaMemcpyHostToDevice));
 
     // Launch kernel
     dim3 blockSize(32, 32);
@@ -117,7 +152,7 @@ void cyclic_compute_next_gen(int *currentGrid, int *nextGrid, int N) {
     cudaDeviceSynchronize();
 
     // Copy result back to host
-    CUDA_CHECK(cudaMemcpy(nextGrid, d_next, totalSize * sizeof(int), cudaMemcpyDeviceToHost));
+    CUDA_CHECK(cudaMemcpy(nextGrid, d_next, totalSize * sizeof(uint8_t), cudaMemcpyDeviceToHost));
     CUDA_CHECK(cudaFree(d_current));
     CUDA_CHECK(cudaFree(d_next));
 }
