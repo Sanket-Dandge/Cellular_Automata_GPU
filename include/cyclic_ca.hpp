@@ -8,10 +8,10 @@
 #include <optional>
 #include <unordered_map>
 
-#define GRID_SIZE 1024
+#define GRID_SIZE 128
 
 enum CellState {
-    STATE1 = 1,
+    STATE1,
     STATE2,
     STATE3,
     STATE4,
@@ -46,6 +46,7 @@ class CyclicCA {
         CyclicCA(const string& filename);
 
         void run(int iterations, int snapshot_interval = 10);
+        static void create_lookup_table(uint8_t table[TOTAL_STATES][2]);
         uint8_t* test_grid1(uint8_t* grid, int size);
         [[nodiscard]] size_t get_grid_size() const { return grid_size; }
 };

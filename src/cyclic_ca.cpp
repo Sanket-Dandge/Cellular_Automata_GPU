@@ -18,13 +18,18 @@ namespace fs = std::filesystem;
 
 CyclicCA::CyclicCA() {
     grid = shared_ptr<uint8_t[]>(new uint8_t[GRID_SIZE * GRID_SIZE]);
-    // utils::generate_random_grid(reinterpret_cast<uint8_t*>(grid.get()), GRID_SIZE);
     test_grid1(grid.get(), GRID_SIZE);
 }
 
 CyclicCA::CyclicCA(shared_ptr<uint8_t[]> grid) : grid(grid) {}
 
-// TODO: Change this function completely
+void CyclicCA::create_lookup_table(uint8_t table[TOTAL_STATES][2]) {
+    for (int i = 0; i < TOTAL_STATES; i++) {
+        table[i][0] = i;            
+        table[i][1] = (i + 1) % TOTAL_STATES;
+    }
+}
+
 uint8_t* CyclicCA::test_grid1(uint8_t* output_grid, int grid_size) {
     for(size_t i = 0; i < grid_size; ++i) {
         for (size_t j = 0; j < grid_size; ++j) {
@@ -70,13 +75,14 @@ void CyclicCA::run(int iterations, int snapshotInterval) {
     // TODO: optimize if possible
     auto grid1 = make_unique<uint8_t[]>(grid_size * grid_size);
     auto grid2 = make_unique<uint8_t[]>(grid_size * grid_size);
-    char *rgb= (char *)malloc (3 * sizeof(char) *(GRID_SIZE)*(GRID_SIZE));	
+    // char *rgb= (char *)malloc (3 * sizeof(char) *(GRID_SIZE)*(GRID_SIZE));	
 
     // Copy the original grid into grid1
     copy(grid.get(), grid.get() + grid_size * grid_size, grid1.get());
 
     for (int i = 0; i < iterations; i++) {
-        cyclic_compute_next_gen(grid1.get(), grid2.get(), grid_size);
+        // cyclic_baseline(grid1.get(), grid2.get(), grid_size);
+        cyclic_lookup_gen(grid1.get(), grid2.get(), grid_size);
         if (i % snapshotInterval == 0) {
             utils::save_grid_to_png(grid2.get(), grid_size, i);
         }
