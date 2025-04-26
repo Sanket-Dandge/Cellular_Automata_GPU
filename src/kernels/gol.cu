@@ -34,13 +34,13 @@ namespace kernels::gol {
             printf("%d,%d\n", col, row);
         }
         int living_neighbors = kernels::gol::count_neighbors(current_grid, col, row, ca_grid_size);
-        next_grid[index] =
-            living_neighbors == 3 || (living_neighbors == 2 && current_grid[index]) ? ALIVE : DEAD;
+        next_grid[index] = (living_neighbors == 3 || (living_neighbors == 2 && current_grid[index]))
+                               ? ALIVE
+                               : DEAD;
         return;
     }
 
-    void compute_next_gen(uint8_t *current_grid, uint8_t *next_grid, size_t ca_grid_size,
-                          size_t niter) {
+    void compute_next_gen(uint8_t *current_grid, size_t ca_grid_size, size_t niter) {
         // Allocate device memory
         uint8_t *d_current = nullptr, *d_next = nullptr;
         size_t total_size = ca_grid_size * ca_grid_size;
@@ -48,8 +48,8 @@ namespace kernels::gol {
         CUDA_CHECK(cudaMalloc(&d_next, total_size * sizeof(uint8_t)));
 
         // Copy data to device
-        CUDA_CHECK(
-            cudaMemcpy(d_current, current_grid, total_size * sizeof(uint8_t), cudaMemcpyHostToDevice));
+        CUDA_CHECK(cudaMemcpy(d_current, current_grid, total_size * sizeof(uint8_t),
+                              cudaMemcpyHostToDevice));
 
         // Launch kernel
         dim3 block_size(32, 32);
@@ -65,10 +65,11 @@ namespace kernels::gol {
             citers++;
             swap(d_current, d_next);
         }
+        // swap(d_current, d_next);
 
         // Copy result back to host
-        CUDA_CHECK(
-            cudaMemcpy(next_grid, d_current, total_size * sizeof(uint8_t), cudaMemcpyDeviceToHost));
+        CUDA_CHECK(cudaMemcpy(current_grid, d_current, total_size * sizeof(uint8_t),
+                              cudaMemcpyDeviceToHost));
         CUDA_CHECK(cudaFree(d_current));
         CUDA_CHECK(cudaFree(d_next));
     }

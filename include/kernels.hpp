@@ -16,6 +16,5 @@ namespace kernels::wireworld {
     void compute_next_gen(uint8_t *current_grid, uint8_t *next_grid, uint ca_grid_size);
 }
 namespace kernels::gol {
-    void compute_next_gen(uint8_t *current_grid, uint8_t *next_grid, size_t ca_grid_size,
-                          size_t niter);
+    void compute_next_gen(uint8_t *current_grid, size_t ca_grid_size, size_t niter);
 }

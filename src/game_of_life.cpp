@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <filesystem>
 
+#include "stb_image_write.h"
 #include <bit>
 #include <fstream>
 #include <iostream>
@@ -14,6 +15,29 @@
 #include <vector>
 
 namespace fs = std::filesystem;
+
+void GameOfLife::save_gol_grid_to_png(const uint8_t *grid, uint grid_size, int iteration) {
+    int channels = 1;
+    std::unique_ptr<uint8_t[]> image(new uint8_t[grid_size * grid_size * channels]);
+
+    for (uint i = 0; i < grid_size; i++) {
+        for (uint j = 0; j < grid_size; j++) {
+            if (grid[i * grid_size + j]) {
+                image[i * grid_size + j] = 255;
+            }
+            else{
+                image[i * grid_size + j] = 0;
+            }
+        }
+    }
+
+    const fs::path output_dir = "output";
+    fs::create_directories(output_dir);
+
+    fs::path filename = output_dir / std::format("gol_{}.png", iteration);
+    stbi_write_png(filename.string().c_str(), grid_size, grid_size, channels, image.get(),
+                   grid_size * channels);
+}
 
 GameOfLife::GameOfLife() {
     grid = shared_ptr<uint8_t[]>(new uint8_t[GRID_SIZE * GRID_SIZE]);
@@ -45,24 +69,11 @@ GameOfLife::GameOfLife(const AutomatonConfiguration &config) {
 GameOfLife::GameOfLife(const string &filename) : GameOfLife(AutomatonConfiguration(filename)) {}
 
 void GameOfLife::run(int iterations, int snapshot_interval) {
-    // TODO: optimize if possible
-    auto grid1 = make_unique<uint8_t[]>(grid_size * grid_size);
-    auto grid2 = make_unique<uint8_t[]>(grid_size * grid_size);
-
-    // Copy the original grid into grid1
-    copy(grid.get(), grid.get() + (grid_size * grid_size), grid1.get());
-
-    for (int i = 0; i < iterations; ) {
-        kernels::gol::compute_next_gen(grid1.get(), grid2.get(), grid_size, snapshot_interval);
+    for (int i = 0; i < iterations;) {
+        kernels::gol::compute_next_gen(grid.get(), grid_size, snapshot_interval);
         i += snapshot_interval;
-        if (i % snapshot_interval == 0) {
-            utils::save_grid_to_png(grid2.get(), grid_size, i);
-        }
-        swap(grid1, grid2);
+        save_gol_grid_to_png(grid.get(), grid_size, i);
     }
-
-    // Copy final state back into original grid
-    copy(grid1.get(), grid1.get() + (grid_size * grid_size), grid.get());
 }
 
 AutomatonConfiguration::AutomatonConfiguration(const fs::path &filename) {

@@ -44,6 +44,7 @@ class GameOfLife {
     GameOfLife(const AutomatonConfiguration &config);
 
     void run(int iterations, int snapshot_interval = 10);
+    static void save_gol_grid_to_png(const uint8_t *grid, uint grid_size, int iteration);
     [[nodiscard]] size_t get_grid_size() const { return grid_size; }
 };
 
