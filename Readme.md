@@ -21,5 +21,16 @@ make
 After building, run the executable with a configuration file:
 
 ```bash
-./bin/game_of_life.o tests/test1.txt
+Run different automatons
+Usage:
+  ./bin/efficient_ca [OPTION...]
+
+  -b, --benchmark              Run in benchmark mode
+  -s, --snapshot-interval arg  Number of frames to take snapshot after,
+                               (ignored in benchmark mode) (default: 10)
+  -a, --automaton arg          Atomaton to run (gol/cca/ww/ff) (default: gol)
+  -c, --config arg             Config file to read (only for gol) (default: )
+  -g, --generations arg        Number of generations to run simulation for
+                               (default: 1024)
+  -h, --help                   Print usage
 ```
