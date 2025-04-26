@@ -36,10 +36,10 @@ class GameOfLife {
     static pair<uint, uint> get_rle_size(const string &filename);
 
   public:
-    shared_ptr<bool[]> grid;
+    shared_ptr<uint8_t[]> grid;
 
     GameOfLife();
-    GameOfLife(shared_ptr<bool[]> grid);
+    GameOfLife(shared_ptr<uint8_t[]> grid);
     GameOfLife(const string &filename);
     GameOfLife(const AutomatonConfiguration &config);
 

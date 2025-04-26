@@ -16,10 +16,10 @@
 namespace fs = std::filesystem;
 
 GameOfLife::GameOfLife() {
-    grid = shared_ptr<bool[]>(new bool[GRID_SIZE * GRID_SIZE]);
+    grid = shared_ptr<uint8_t[]>(new uint8_t[GRID_SIZE * GRID_SIZE]);
     utils::generate_random_grid(grid.get(), GRID_SIZE);
 }
-GameOfLife::GameOfLife(shared_ptr<bool[]> grid) : grid(std::move(grid)) {}
+GameOfLife::GameOfLife(shared_ptr<uint8_t[]> grid) : grid(std::move(grid)) {}
 
 GameOfLife::GameOfLife(const AutomatonConfiguration &config) {
     if (config.size == "nextPower") {
@@ -34,7 +34,7 @@ GameOfLife::GameOfLife(const AutomatonConfiguration &config) {
         grid_size = stoi(config.size);
     }
 
-    grid = shared_ptr<bool[]>(new bool[grid_size * grid_size]);
+    grid = shared_ptr<uint8_t[]>(new uint8_t[grid_size * grid_size]);
 
     if (config.generate_random) {
         utils::generate_random_grid(grid.get(), grid_size);
@@ -46,14 +46,14 @@ GameOfLife::GameOfLife(const string &filename) : GameOfLife(AutomatonConfigurati
 
 void GameOfLife::run(int iterations, int snapshot_interval) {
     // TODO: optimize if possible
-    auto grid1 = make_unique<bool[]>(grid_size * grid_size);
-    auto grid2 = make_unique<bool[]>(grid_size * grid_size);
+    auto grid1 = make_unique<uint8_t[]>(grid_size * grid_size);
+    auto grid2 = make_unique<uint8_t[]>(grid_size * grid_size);
 
     // Copy the original grid into grid1
     copy(grid.get(), grid.get() + (grid_size * grid_size), grid1.get());
 
     for (int i = 0; i < iterations; i++) {
-        compute_next_gen(grid1.get(), grid2.get(), grid_size);
+        kernels::gol::compute_next_gen(grid1.get(), grid2.get(), grid_size, 1);
         if (i % snapshot_interval == 0) {
             utils::save_grid_to_png(grid2.get(), grid_size, i);
         }
@@ -206,7 +206,7 @@ void GameOfLife::load_grid_from_file(const string &filename) {
             run_count = run_count * 10 + (c - '0');
         } else if (c == 'b' || c == 'o') {
             size_t count = run_count ? run_count : 1;
-            bool value = (c == 'o');
+            uint8_t value = (c == 'o');
 
             for (size_t j = 0; j < count; ++j) {
                 if (x < grid_size && y < grid_size)
