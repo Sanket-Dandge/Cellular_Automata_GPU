@@ -1,5 +1,6 @@
 #include "utils.h"
 #include "kernels.hpp"
+#include "wireworld.hpp"
 #include <complex>
 #include <cstdint>
 #include <format>
@@ -56,11 +57,10 @@ namespace utils {
                 count[normalize] += 1;
             }
         }
-        cout << "Grid initialized with: "<< endl;
+        cout << "Grid initialized with: " << endl;
         for (int i = 0; i < state_count; i++) {
             cout << "\t" << i << ": " << count[i] << endl;
         }
-        // cout << "Percent: " << static_cast<float>(count) / (float)(grid_size * grid_size) << endl;
     }
 
     float r4_uniform_01(int *seed) {
@@ -136,7 +136,7 @@ namespace utils {
         stbi_write_png(filename.string().c_str(), grid_size, grid_size, channels, image.get(), grid_size * channels);
     }
 
-    void save_grid_to_png_ww(uint8_t* grid, uint grid_size, int iteration) {
+    void save_grid_to_png_ww(uint8_t *grid, uint grid_size, int iteration) {
         int channels = 3;
         unique_ptr<uint8_t[]> image(new uint8_t[grid_size * grid_size * channels]);
         // generate_rgb(grid_size, grid_size, grid, reinterpret_cast<char*>(image.get()));
@@ -148,8 +148,15 @@ namespace utils {
                 image[3 * index + 0] = 0;
                 image[3 * index + 1] = 0;
                 image[3 * index + 2] = 0;
-                if(state != 0){
-                    image[3 * index + state] = 255;
+                if (state == CONDUCTOR) {
+                    image[3 * index + 0] = 255;
+                    image[3 * index + 1] = 255;
+                }
+                if (state == HEAD) {
+                    image[3 * index + 1] = 255;
+                }
+                if (state == TAIL) {
+                    image[3 * index + 0] = 255;
                 }
             }
         }
@@ -158,6 +165,7 @@ namespace utils {
 
         fs::path filename = output_dir / std::format("ww_{}.png", iteration);
 
-        stbi_write_png(filename.string().c_str(), grid_size, grid_size, channels, image.get(), grid_size * channels);
+        stbi_write_png(filename.string().c_str(), grid_size, grid_size, channels, image.get(),
+                       grid_size * channels);
     }
 } // namespace utils

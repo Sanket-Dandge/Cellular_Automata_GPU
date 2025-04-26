@@ -4,7 +4,7 @@
 #include <cstdint>
 #include <string>
 
-#define GRID_SIZE 1024
+#define GRID_SIZE 128
 
 enum States : uint8_t {
     EMPTY = 0,
