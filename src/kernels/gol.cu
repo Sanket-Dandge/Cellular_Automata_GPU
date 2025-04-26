@@ -44,12 +44,12 @@ namespace kernels::gol {
         // Allocate device memory
         uint8_t *d_current = nullptr, *d_next = nullptr;
         size_t total_size = ca_grid_size * ca_grid_size;
-        CUDA_CHECK(cudaMalloc(&d_current, total_size * sizeof(bool)));
-        CUDA_CHECK(cudaMalloc(&d_next, total_size * sizeof(bool)));
+        CUDA_CHECK(cudaMalloc(&d_current, total_size * sizeof(uint8_t)));
+        CUDA_CHECK(cudaMalloc(&d_next, total_size * sizeof(uint8_t)));
 
         // Copy data to device
         CUDA_CHECK(
-            cudaMemcpy(d_current, current_grid, total_size * sizeof(bool), cudaMemcpyHostToDevice));
+            cudaMemcpy(d_current, current_grid, total_size * sizeof(uint8_t), cudaMemcpyHostToDevice));
 
         // Launch kernel
         dim3 block_size(32, 32);
@@ -60,17 +60,15 @@ namespace kernels::gol {
         while (citers < niter) {
             kernels::gol::compute_next_gen_kernel<<<grid_size, block_size>>>(d_current, d_next,
                                                                              ca_grid_size);
+            CUDA_CHECK(cudaGetLastError());
             cudaDeviceSynchronize();
-            niter++;
+            citers++;
             swap(d_current, d_next);
         }
 
-        CUDA_CHECK(cudaGetLastError());
-        cudaDeviceSynchronize();
-
         // Copy result back to host
         CUDA_CHECK(
-            cudaMemcpy(next_grid, d_next, total_size * sizeof(bool), cudaMemcpyDeviceToHost));
+            cudaMemcpy(next_grid, d_current, total_size * sizeof(uint8_t), cudaMemcpyDeviceToHost));
         CUDA_CHECK(cudaFree(d_current));
         CUDA_CHECK(cudaFree(d_next));
     }

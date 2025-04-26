@@ -106,22 +106,22 @@ namespace utils {
         return rgb;
     }
 
-    char* generate_rgb_packet(int width, int height, uint64_t* grid, char* rgb) {
-        for (int y = 0; y < height; ++y) {
-            for (int x = 0; x < width; ++x) {
-                int cell_index = y * (ROW_SIZE) + (x / ELEMENTS_PER_CELL);
-                uint64_t cell = grid[cell_index];
-                int subcell_index = x % ELEMENTS_PER_CELL;
-                uint8_t subcell = getSubCellH(cell, subcell_index);
+    // char* generate_rgb_packet(int width, int height, uint64_t* grid, char* rgb) {
+    //     for (int y = 0; y < height; ++y) {
+    //         for (int x = 0; x < width; ++x) {
+    //             int cell_index = y * (ROW_SIZE) + (x / ELEMENTS_PER_CELL);
+    //             uint64_t cell = grid[cell_index];
+    //             int subcell_index = x % ELEMENTS_PER_CELL;
+    //             uint8_t subcell = getSubCellH(cell, subcell_index);
 
-                int rgb_index = 3 * (y * width + x);
-                rgb[rgb_index + 0] = STATE_COLORS[subcell][0];
-                rgb[rgb_index + 1] = STATE_COLORS[subcell][1];
-                rgb[rgb_index + 2] = STATE_COLORS[subcell][2];
-            }
-        }
-        return rgb;
-    }
+    //             int rgb_index = 3 * (y * width + x);
+    //             rgb[rgb_index + 0] = STATE_COLORS[subcell][0];
+    //             rgb[rgb_index + 1] = STATE_COLORS[subcell][1];
+    //             rgb[rgb_index + 2] = STATE_COLORS[subcell][2];
+    //         }
+    //     }
+    //     return rgb;
+    // }
 
     void save_grid_to_png(uint8_t* X, int grid_size, int iteration) {
         int channels = 3;

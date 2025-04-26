@@ -26,7 +26,7 @@ int main(int argc, char *argv[]) {
 
     string config_file = argv[1];
 
-    CyclicCA life;
+    GameOfLife life(config_file);
     cout << life.get_grid_size() << endl;
     {int iters = 1000;
     ScopedTimer __t(format("Iterations-{}", iters));

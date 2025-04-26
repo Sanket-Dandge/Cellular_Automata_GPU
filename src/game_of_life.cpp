@@ -52,8 +52,9 @@ void GameOfLife::run(int iterations, int snapshot_interval) {
     // Copy the original grid into grid1
     copy(grid.get(), grid.get() + (grid_size * grid_size), grid1.get());
 
-    for (int i = 0; i < iterations; i++) {
-        kernels::gol::compute_next_gen(grid1.get(), grid2.get(), grid_size, 1);
+    for (int i = 0; i < iterations; ) {
+        kernels::gol::compute_next_gen(grid1.get(), grid2.get(), grid_size, snapshot_interval);
+        i += snapshot_interval;
         if (i % snapshot_interval == 0) {
             utils::save_grid_to_png(grid2.get(), grid_size, i);
         }
@@ -75,6 +76,7 @@ AutomatonConfiguration::AutomatonConfiguration(const fs::path &filename) {
         if (grid_file && !grid_file->is_absolute()) {
             grid_file = filename.parent_path() / *grid_file;
         }
+        generate_random = false;
     } else {
         grid_file = nullopt;
         generate_random = true;
