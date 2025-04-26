@@ -4,20 +4,24 @@
 #include <cstdint>
 #include <string>
 
-#define GRID_SIZE 128
+static const int default_grid_size = 128;
 
 enum States : uint8_t {
     EMPTY = 0,
-    HEAD = 1,
-    TAIL = 2,
-    CONDUCTOR = 3,
+    HEAD = 17,
+    TAIL = 1,
+    CONDUCTOR = 2,
+};
+enum Implementation {
+  BASE,
+  LUT,
 };
 
 using namespace std;
 
 class WireWorldCA {
   private:
-    size_t grid_size = GRID_SIZE;
+    size_t grid_size = default_grid_size;
 
     void read_configuration_from_file(const string &filename);
     void load_grid_from_file(const string &filename);
@@ -31,6 +35,6 @@ class WireWorldCA {
     // WireWorldCA(const string &filename);
     // WireWorldCA(const AutomatonConfiguration &config);
 
-    void run(int iterations, int snapshot_interval = 10);
+    void run(int iterations, int snapshot_interval = 10, Implementation impl = BASE);
     [[nodiscard]] size_t get_grid_size() const { return grid_size; }
 };
