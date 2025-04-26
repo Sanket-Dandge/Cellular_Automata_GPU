@@ -80,7 +80,7 @@ int main(int argc, char *argv[]) {
             ScopedTimer t(format("Iterations-{}", generations));
             cca.run(generations, snapshot_interval);
         }
-    } else if (automaton == "fa") {
+    } else if (automaton == "ff") {
         {
             ScopedTimer t(format("Iterations-{}", generations));
             forest_fire_baseline(generations);
