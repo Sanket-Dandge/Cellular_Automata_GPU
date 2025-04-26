@@ -136,7 +136,7 @@ namespace utils {
         stbi_write_png(filename.string().c_str(), grid_size, grid_size, channels, image.get(), grid_size * channels);
     }
 
-    void save_grid_to_png_ww(uint8_t* grid, int grid_size, int iteration) {
+    void save_grid_to_png_ww(uint8_t* grid, uint grid_size, int iteration) {
         int channels = 3;
         unique_ptr<uint8_t[]> image(new uint8_t[grid_size * grid_size * channels]);
         // generate_rgb(grid_size, grid_size, grid, reinterpret_cast<char*>(image.get()));
