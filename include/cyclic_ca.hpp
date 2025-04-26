@@ -8,8 +8,6 @@
 #include <optional>
 #include <unordered_map>
 
-#define GRID_SIZE 128
-
 enum CellState {
     STATE1,
     STATE2,
@@ -43,11 +41,13 @@ class CyclicCA {
 
         CyclicCA();
         CyclicCA(shared_ptr<uint8_t[]> grid);
+        CyclicCA(shared_ptr<uint64_t[]> packet_grid);
         CyclicCA(const string& filename);
 
-        void run(int iterations, int snapshot_interval = 10);
+        void run(int iterations, int snapshotInterval = 10);
         static void create_lookup_table(uint8_t table[TOTAL_STATES][2]);
         uint8_t* test_grid1(uint8_t* grid, int size);
+        uint64_t* test_grid_packet_coding1(uint64_t* grid, int size);
         [[nodiscard]] size_t get_grid_size() const { return grid_size; }
 };
 

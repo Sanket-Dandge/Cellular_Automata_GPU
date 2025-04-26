@@ -1,4 +1,5 @@
 #include "utils.h"
+#include "kernels.hpp"
 #include <complex>
 #include <cstdint>
 #include <format>
@@ -14,9 +15,11 @@
 #include <iostream>
 #include <string>
 #include <vector>
+#include <type_traits>
 
 using namespace std;
 namespace fs = std::filesystem;
+
 
 const unsigned char STATE_COLORS[15][3] = {
     {177,  25, 251},  // STATE1
@@ -97,16 +100,33 @@ namespace utils {
         return rgb;
     }
 
+    char* generate_rgb_packet(int width, int height, uint64_t* grid, char* rgb) {
+        for (int y = 0; y < height; ++y) {
+            for (int x = 0; x < width; ++x) {
+                int cell_index = y * (ROW_SIZE) + (x / ELEMENTS_PER_CELL);
+                uint64_t cell = grid[cell_index];
+                int subcell_index = x % ELEMENTS_PER_CELL;
+                uint8_t subcell = getSubCellH(cell, subcell_index);
+
+                int rgb_index = 3 * (y * width + x);
+                rgb[rgb_index + 0] = STATE_COLORS[subcell][0];
+                rgb[rgb_index + 1] = STATE_COLORS[subcell][1];
+                rgb[rgb_index + 2] = STATE_COLORS[subcell][2];
+            }
+        }
+        return rgb;
+    }
+
     void save_grid_to_png(uint8_t* X, int grid_size, int iteration) {
         int channels = 3;
-        unique_ptr<uint8_t[]> image(new uint8_t[grid_size * grid_size * channels]);
-        generate_rgb(grid_size, grid_size, X, reinterpret_cast<char*>(image.get()));
+        std::unique_ptr<uint8_t[]> image(new uint8_t[grid_size * grid_size * channels]);
+
+        generate_rgb(grid_size, grid_size, reinterpret_cast<uint8_t*>(X), reinterpret_cast<char*>(image.get()));
 
         const fs::path output_dir = "output";
         fs::create_directories(output_dir);
 
         fs::path filename = output_dir / std::format("gol_{}.png", iteration);
-
         stbi_write_png(filename.string().c_str(), grid_size, grid_size, channels, image.get(), grid_size * channels);
     }
 } // namespace utils

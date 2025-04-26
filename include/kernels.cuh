@@ -3,6 +3,8 @@
 
 #include <cstdint>
 #include <cuda.h>
+#define ELEMENTS_PER_CELL 8
+#define ROW_SIZE GRID_SIZE/ELEMENTS_PER_CELL    // Real grid dimension
 
 namespace kernels {
     __host__ __device__ int count_neighbors(bool *currentGrid, int col, int row, int gridSize);
@@ -10,8 +12,9 @@ namespace kernels {
     __global__ void compute_next_gen_kernel(bool *currentGrid, bool *nextGrid, int N);
     __global__ void cyclic_baseline_kernel(uint8_t *currentGrid, uint8_t *nextGrid, int N);
     __global__ void cyclic_lookup_kernel(uint8_t *currentGrid, uint8_t* nextGrid, int N, uint8_t *lookup_table);
-    // TODO: Write its code
-    __global__ void cyclic_packet_coding_kernel(uint8_t *currentGrid, uint8_t* nextGrid, int N, uint8_t *lookup_table);
+    __global__ void cyclic_packet_coding_kernel(uint64_t *currentGrid, uint64_t* nextGrid, int N, uint8_t *lookup_table);
+    __device__ void setSubCellD(uint64_t* currentCell, char position, uint8_t subCell);
+    __device__ uint8_t getSubCellD(uint64_t currentCell, char position);
 } // namespace kernels
 
 #endif
