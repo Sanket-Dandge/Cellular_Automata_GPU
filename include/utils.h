@@ -16,7 +16,8 @@
 
 namespace utils {
     void read_configuration_from_file(int *X, std::string filename, size_t N);
-    void generate_random_grid(uint8_t *grid, size_t grid_size, int seed = time(nullptr));
+    void generate_random_grid(uint8_t *grid, size_t grid_size, int seed = time(nullptr),
+                              uint8_t state_count = 2);
     void save_grid(uint8_t *X, size_t N);
     char* generate_rgb(int width, int height, uint64_t* grid, char* rgb);
     char* generate_rgb_packet(int width, int height, uint64_t* grid, char* rgb);

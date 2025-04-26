@@ -41,27 +41,33 @@ const unsigned char STATE_COLORS[15][3] = {
 
 namespace utils {
 
-    void generate_random_grid(uint8_t *grid, size_t grid_size, int seed) {
+    void generate_random_grid(uint8_t *grid, size_t grid_size, int seed, uint8_t state_count) {
         cout << "Initializing random grid" << endl;
         srand(seed);
-        int count = 0;
+        vector<int> count(state_count);
+        for (int i = 0; i < state_count; i++) {
+            count[i] = 0;
+        }
 
         for (size_t i = 0; i < grid_size; i++) {
             for (size_t j = 0; j < grid_size; j++) {
-                bool normalize = ((float)rand() / (float)RAND_MAX) < THRESHOLD;
-                grid[i * grid_size + j] = static_cast<uint8_t>(normalize);
-                count += normalize;
+                uint8_t normalize = rand() % state_count;
+                grid[i * grid_size + j] = normalize;
+                count[normalize] += 1;
             }
         }
-        cout << "Number of non zero elements: " << count << endl;
-        cout << "Percent: " << static_cast<float>(count) / (float)(grid_size * grid_size) << endl;
+        cout << "Grid initialized with: "<< endl;
+        for (int i = 0; i < state_count; i++) {
+            cout << "\t" << i << ": " << count[i] << endl;
+        }
+        // cout << "Percent: " << static_cast<float>(count) / (float)(grid_size * grid_size) << endl;
     }
 
     float r4_uniform_01(int *seed) {
         const int i4_huge = 2147483647;
         int k;
         float r;
-        
+
         k = *seed / 127773;
         *seed = 16807 * ( *seed - k * 127773 ) - k * 2836;
         if ( *seed < 0 ) {
