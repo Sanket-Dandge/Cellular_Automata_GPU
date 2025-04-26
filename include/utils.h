@@ -23,6 +23,7 @@ namespace utils {
     char* generate_rgb_packet(int width, int height, uint64_t* grid, char* rgb);
     float r4_uniform_01 (int *seed);
     void save_grid_to_png(uint8_t* X, int grid_size, int iteration);
+    void save_grid_to_png_ww(uint8_t *grid, int grid_size, int iteration);
 } // namespace utils
 
 #endif // !UTILS_H

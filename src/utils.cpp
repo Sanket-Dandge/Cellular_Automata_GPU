@@ -135,4 +135,29 @@ namespace utils {
         fs::path filename = output_dir / std::format("gol_{}.png", iteration);
         stbi_write_png(filename.string().c_str(), grid_size, grid_size, channels, image.get(), grid_size * channels);
     }
+
+    void save_grid_to_png_ww(uint8_t* grid, int grid_size, int iteration) {
+        int channels = 3;
+        unique_ptr<uint8_t[]> image(new uint8_t[grid_size * grid_size * channels]);
+        // generate_rgb(grid_size, grid_size, grid, reinterpret_cast<char*>(image.get()));
+
+        for (int i = 0; i < grid_size; ++i) {
+            for (int j = 0; j < grid_size; ++j) {
+                int index = i * grid_size + j;
+                int state = grid[index];
+                image[3 * index + 0] = 0;
+                image[3 * index + 1] = 0;
+                image[3 * index + 2] = 0;
+                if(state != 0){
+                    image[3 * index + state] = 255;
+                }
+            }
+        }
+        const fs::path output_dir = "output";
+        fs::create_directories(output_dir);
+
+        fs::path filename = output_dir / std::format("ww_{}.png", iteration);
+
+        stbi_write_png(filename.string().c_str(), grid_size, grid_size, channels, image.get(), grid_size * channels);
+    }
 } // namespace utils

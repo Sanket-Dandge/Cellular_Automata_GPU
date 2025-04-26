@@ -21,7 +21,7 @@ void WireWorldCA::run(int iterations, int snapshot_interval) {
     for (int i = 0; i < iterations; i++) {
         kernels::wireworld::compute_next_gen(grid1.get(), grid2.get(), grid_size);
         if (i % snapshot_interval == 0) {
-            utils::save_grid_to_png(grid2.get(), grid_size, i);
+            utils::save_grid_to_png_ww(grid2.get(), grid_size, i);
         }
         swap(grid1, grid2);
     }
