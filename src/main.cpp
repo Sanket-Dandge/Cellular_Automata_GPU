@@ -1,4 +1,5 @@
 #include "cyclic_ca.hpp"
+#include "forest_fire.hpp"
 #include "game_of_life.hpp"
 #include "wireworld.hpp"
 #include <cxxopts.hpp>
@@ -31,7 +32,7 @@ int main(int argc, char *argv[]) {
         ("s,snapshot-interval",
          "Number of frames to take snapshot after, (ignored in benchmark mode)",
          cxxopts::value<int>()->default_value("10"))
-        ("a,automaton", "Atomaton to run (gol/cca/ww)", cxxopts::value<string>()->default_value("gol"))
+        ("a,automaton", "Atomaton to run (gol/cca/ww/ff)", cxxopts::value<string>()->default_value("gol"))
         ("c,config", "Config file to read (only for gol)", cxxopts::value<string>()->default_value(""))
         ("g,generations", "Number of generations to run simulation for", cxxopts::value<int>()->default_value("1024"))
         ("h,help", "Print usage");
@@ -50,9 +51,9 @@ int main(int argc, char *argv[]) {
     string config_file = result["config"].as<string>();
 
     // Validate automaton value
-    const set<string> valid_automatons = {"gol", "cca", "ww"};
+    const set<string> valid_automatons = {"gol", "cca", "ww", "ff"};
     if (valid_automatons.find(automaton) == valid_automatons.end()) {
-        cerr << "Invalid automaton: " << automaton << ". Valid options are: gol, cca, ww." << endl;
+        cerr << "Invalid automaton: " << automaton << ". Valid options are: gol, cca, ww, ff." << endl;
         return 1;
     }
     if (automaton != "gol" && result.count("config") != 0) {
@@ -78,6 +79,11 @@ int main(int argc, char *argv[]) {
         {
             ScopedTimer t(format("Iterations-{}", generations));
             cca.run(generations, snapshot_interval);
+        }
+    } else if (automaton == "fa") {
+        {
+            ScopedTimer t(format("Iterations-{}", generations));
+            forest_fire_baseline(generations);
         }
     } else {
         WireWorldCA ww;

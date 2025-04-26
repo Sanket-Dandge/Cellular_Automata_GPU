@@ -24,6 +24,9 @@ add_library(${PROJECT_NAME}_kernels
 target_link_libraries(${PROJECT_NAME}_kernels
   ${PROJECT_NAME}_utils
 )
+add_library(${PROJECT_NAME}_ff
+  src/kernels/forest_fire/forest_fire_baseline.cu
+)
 
 add_library(${PROJECT_NAME}_lib
   src/game_of_life.cpp
@@ -39,4 +42,5 @@ add_executable(${PROJECT_NAME}
   src/main.cpp)
 target_link_libraries(${PROJECT_NAME}
   ${PROJECT_NAME}_lib
+  ${PROJECT_NAME}_ff
 )
