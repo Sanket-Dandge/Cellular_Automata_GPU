@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.18)
-project(cyclic_ca LANGUAGES CXX CUDA)
+project(efficient_ca LANGUAGES CXX CUDA)
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -25,18 +25,18 @@ target_link_libraries(${PROJECT_NAME}_kernels
   ${PROJECT_NAME}_utils
 )
 
-add_library(${PROJECT_NAME}_ca
+add_library(${PROJECT_NAME}_lib
   src/game_of_life.cpp
   src/cyclic_ca.cpp
   src/wireworld.cpp
 )
-target_link_libraries(${PROJECT_NAME}_ca
+target_link_libraries(${PROJECT_NAME}_lib
   ${PROJECT_NAME}_kernels
   ${PROJECT_NAME}_utils
 )
 
-add_executable(${PROJECT_NAME}.o
-  src/test.cpp)
-target_link_libraries(${PROJECT_NAME}.o
-  ${PROJECT_NAME}_ca
+add_executable(${PROJECT_NAME}
+  src/main.cpp)
+target_link_libraries(${PROJECT_NAME}
+  ${PROJECT_NAME}_lib
 )
