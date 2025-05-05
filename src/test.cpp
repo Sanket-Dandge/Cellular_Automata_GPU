@@ -14,11 +14,51 @@ TEST_CASE("Wireworld_base") {
     shared_ptr<uint8_t[]> grid = std::shared_ptr<uint8_t[]>(new uint8_t[size]);
     shared_ptr<uint8_t[]> exp10 = std::shared_ptr<uint8_t[]>(new uint8_t[size]);
     for (int i = 0; i < size; i++) {
-        grid[i] = 0;
-        exp10[i] = 0;
+        grid[i] = EMPTY;
+        exp10[i] = EMPTY;
+    }
+    for (int i = 1; i < 127; i++) {
+        grid[(63 * 128) + i] = i == 1 ? HEAD : CONDUCTOR;
+        exp10[(63 * 128) + i] = i == 11 ? HEAD : (i == 10 ? TAIL : CONDUCTOR);
     }
     auto ww = WireWorldCA(grid);
     ww.run(10, 1, BASE);
+
+    CHECK(std::memcmp(grid.get(), exp10.get(), size) == 0);
+}
+
+TEST_CASE("Wireworld_lut") {
+    const int size = 128 * 128;
+    shared_ptr<uint8_t[]> grid = std::shared_ptr<uint8_t[]>(new uint8_t[size]);
+    shared_ptr<uint8_t[]> exp10 = std::shared_ptr<uint8_t[]>(new uint8_t[size]);
+    for (int i = 0; i < size; i++) {
+        grid[i] = EMPTY;
+        exp10[i] = EMPTY;
+    }
+    for (int i = 1; i < 127; i++) {
+        grid[(63 * 128) + i] = i == 1 ? HEAD : CONDUCTOR;
+        exp10[(63 * 128) + i] = i == 11 ? HEAD : (i == 10 ? TAIL : CONDUCTOR);
+    }
+    auto ww = WireWorldCA(grid);
+    ww.run(10, 1, LUT);
+
+    CHECK(std::memcmp(grid.get(), exp10.get(), size) == 0);
+}
+
+TEST_CASE("Wireworld_packet_coding") {
+    const int size = 128 * 128;
+    shared_ptr<uint8_t[]> grid = std::shared_ptr<uint8_t[]>(new uint8_t[size]);
+    shared_ptr<uint8_t[]> exp10 = std::shared_ptr<uint8_t[]>(new uint8_t[size]);
+    for (int i = 0; i < size; i++) {
+        grid[i] = EMPTY;
+        exp10[i] = EMPTY;
+    }
+    for (int i = 1; i < 127; i++) {
+        grid[(63 * 128) + i] = i == 1 ? HEAD : CONDUCTOR;
+        exp10[(63 * 128) + i] = i == 11 ? HEAD : (i == 10 ? TAIL : CONDUCTOR);
+    }
+    auto ww = WireWorldCA(grid);
+    ww.run(10, 1, LUT);
 
     CHECK(std::memcmp(grid.get(), exp10.get(), size) == 0);
 }

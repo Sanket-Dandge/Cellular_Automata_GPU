@@ -81,17 +81,28 @@ WireWorldCA::WireWorldCA(shared_ptr<uint8_t[]> grid) : grid(std::move(grid)) {}
 
 void WireWorldCA::run(int iterations, int snapshot_interval, Implementation impl) {
     utils::save_grid_to_png_ww(grid.get(), grid_size, 0);
-    if (impl == BASE) {
-        for (int i = 0; i < iterations;) {
-            kernels::wireworld::compute_next_gen_base(grid.get(), grid_size, snapshot_interval);
-            i += snapshot_interval;
-            utils::save_grid_to_png_ww(grid.get(), grid_size, i);
-        }
-    }else{
+    switch (impl) {
+    case LUT: {
         for (int i = 0; i < iterations;) {
             kernels::wireworld::compute_next_gen_lut(grid.get(), grid_size, snapshot_interval);
             i += snapshot_interval;
             utils::save_grid_to_png_ww(grid.get(), grid_size, i);
         }
+    }
+    case PACKET_CODING: {
+        for (int i = 0; i < iterations;) {
+            // TODO: Change this kernel
+            kernels::wireworld::compute_next_gen_lut(grid.get(), grid_size, snapshot_interval);
+            i += snapshot_interval;
+            utils::save_grid_to_png_ww(grid.get(), grid_size, i);
+        }
+    }
+    default: {
+        for (int i = 0; i < iterations;) {
+            kernels::wireworld::compute_next_gen_base(grid.get(), grid_size, snapshot_interval);
+            i += snapshot_interval;
+            utils::save_grid_to_png_ww(grid.get(), grid_size, i);
+        }
+    }
     }
 }

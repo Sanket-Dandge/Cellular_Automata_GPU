@@ -13,8 +13,9 @@ enum States : uint8_t {
     CONDUCTOR = 2,
 };
 enum Implementation {
-  BASE,
-  LUT,
+    BASE,
+    LUT,
+    PACKET_CODING,
 };
 
 using namespace std;
