@@ -64,7 +64,7 @@ namespace {
 } // namespace
 
 WireWorldCA::WireWorldCA() {
-    grid = shared_ptr<uint8_t[]>(new uint8_t[GRID_SIZE * GRID_SIZE]);
+    grid = shared_ptr<uint8_t[]>(new uint8_t[default_grid_size * default_grid_size]);
     // generate_test_pattern(grid.get(), GRID_SIZE, 0);
     for (size_t i = 0; i < grid_size; i += 2) {
         for (size_t j = 0; j < grid_size; j++) {
@@ -73,7 +73,7 @@ WireWorldCA::WireWorldCA() {
         }
         grid[i * (grid_size) + 0] = HEAD;
     }
-    utils::save_grid_to_png_ww(grid.get(), GRID_SIZE, 9);
+    utils::save_grid_to_png_ww(grid.get(), grid_size, 0);
 }
 WireWorldCA::WireWorldCA(shared_ptr<uint8_t[]> grid, uint p_grid_size)
     : grid_size(p_grid_size), grid(std::move(grid)) {

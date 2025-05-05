@@ -5,7 +5,7 @@
 #include <string>
 #include "common.hpp"
 
-static const int default_grid_size = 128;
+static const int default_grid_size = 256;
 
 enum States : uint8_t {
     EMPTY = 0,

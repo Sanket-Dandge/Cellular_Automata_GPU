@@ -126,6 +126,7 @@ namespace kernels::wireworld {
 
         if (index >= grid_size * grid_size) {
             printf("%d,%d\n", col, row);
+            return;
         }
         uint8_t(*lookup_table)[LOOKUP_TABLE_LIMIT] = (uint8_t(*)[LOOKUP_TABLE_LIMIT])lut;
 
@@ -229,8 +230,8 @@ namespace kernels::wireworld {
 
         // Launch kernel
         dim3 block_size(32, 32);
-        dim3 grid_size((ca_grid_size + block_size.x - 1) / (block_size.x * 8),
-                       (ca_grid_size + block_size.y - 1) / (block_size.y));
+        dim3 grid_size(max((ca_grid_size + block_size.x - 1) / (block_size.x * 8), 1),
+                       max((ca_grid_size + block_size.y - 1) / (block_size.y), 1));
 
         int citers = 0;
         while (citers < niter) {

@@ -110,12 +110,15 @@ int main(int argc, char *argv[]) {
             }
             }
         }
-    } else {
+    } else if (automaton == "ww") {
+        cout << "Running wireworld" << endl;
         WireWorldCA ww;
         {
             ScopedTimer t(format("Iterations-{}", generations));
             ww.run(generations, snapshot_interval, impl);
         }
+    } else {
+        cerr << "Something went wrong, unknown automaton " << automaton << endl;
     }
 
     return 0;
