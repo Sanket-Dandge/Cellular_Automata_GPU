@@ -24,8 +24,7 @@ void GameOfLife::save_gol_grid_to_png(const uint8_t *grid, uint grid_size, int i
         for (uint j = 0; j < grid_size; j++) {
             if (grid[i * grid_size + j]) {
                 image[i * grid_size + j] = 255;
-            }
-            else{
+            } else {
                 image[i * grid_size + j] = 0;
             }
         }
@@ -68,11 +67,24 @@ GameOfLife::GameOfLife(const AutomatonConfiguration &config) {
 }
 GameOfLife::GameOfLife(const string &filename) : GameOfLife(AutomatonConfiguration(filename)) {}
 
-void GameOfLife::run(int iterations, int snapshot_interval) {
-    for (int i = 0; i < iterations;) {
-        kernels::gol::compute_next_gen(grid.get(), grid_size, snapshot_interval);
-        i += snapshot_interval;
-        save_gol_grid_to_png(grid.get(), grid_size, i);
+void GameOfLife::run(int iterations, int snapshot_interval, Implementation impl) {
+    switch (impl) {
+    case PACKET_CODING: {
+        for (int i = 0; i < iterations;) {
+            kernels::gol::compute_next_gen_packet_coding(grid.get(), grid_size, snapshot_interval);
+            i += snapshot_interval;
+            save_gol_grid_to_png(grid.get(), grid_size, i);
+        }
+        break;
+    }
+    default: {
+        for (int i = 0; i < iterations;) {
+            kernels::gol::compute_next_gen(grid.get(), grid_size, snapshot_interval);
+            i += snapshot_interval;
+            save_gol_grid_to_png(grid.get(), grid_size, i);
+        }
+        break;
+    }
     }
 }
 

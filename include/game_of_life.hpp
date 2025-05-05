@@ -1,6 +1,7 @@
 #ifndef GAME_OF_LIFE_CUH
 #define GAME_OF_LIFE_CUH
 
+#include "common.hpp"
 #include "utils.h"
 #include <filesystem>
 #include <memory>
@@ -43,7 +44,7 @@ class GameOfLife {
     GameOfLife(const string &filename);
     GameOfLife(const AutomatonConfiguration &config);
 
-    void run(int iterations, int snapshot_interval = 10);
+    void run(int iterations, int snapshot_interval = 10, Implementation impl = BASE);
     static void save_gol_grid_to_png(const uint8_t *grid, uint grid_size, int iteration);
     [[nodiscard]] size_t get_grid_size() const { return grid_size; }
 };

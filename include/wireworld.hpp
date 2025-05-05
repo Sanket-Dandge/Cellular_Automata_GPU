@@ -3,6 +3,7 @@
 #include "utils.h"
 #include <cstdint>
 #include <string>
+#include "common.hpp"
 
 static const int default_grid_size = 128;
 
@@ -11,11 +12,6 @@ enum States : uint8_t {
     HEAD = 17,
     TAIL = 1,
     CONDUCTOR = 2,
-};
-enum Implementation {
-    BASE,
-    LUT,
-    PACKET_CODING,
 };
 
 using namespace std;

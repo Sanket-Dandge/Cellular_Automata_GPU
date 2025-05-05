@@ -129,7 +129,7 @@ namespace kernels::wireworld {
         }
         uint8_t(*lookup_table)[LOOKUP_TABLE_LIMIT] = (uint8_t(*)[LOOKUP_TABLE_LIMIT])lut;
 
-        for(uint i = 0; i < 8; i++){
+        for (uint i = 0; i < 8; i++) {
             int sum = surround_sum(current_grid, col + i, row, grid_size);
             next_grid[index + i] = lookup_table[current_grid[index + i]][sum];
         }
