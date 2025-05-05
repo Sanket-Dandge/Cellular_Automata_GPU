@@ -75,7 +75,9 @@ WireWorldCA::WireWorldCA() {
     }
     utils::save_grid_to_png_ww(grid.get(), GRID_SIZE, 9);
 }
-WireWorldCA::WireWorldCA(shared_ptr<uint8_t[]> grid) : grid(std::move(grid)) {}
+WireWorldCA::WireWorldCA(shared_ptr<uint8_t[]> grid, uint p_grid_size)
+    : grid_size(p_grid_size), grid(std::move(grid)) {
+}
 
 // WireWorldCA::WireWorldCA(const string &filename) {}
 
@@ -88,14 +90,16 @@ void WireWorldCA::run(int iterations, int snapshot_interval, Implementation impl
             i += snapshot_interval;
             utils::save_grid_to_png_ww(grid.get(), grid_size, i);
         }
+        break;
     }
     case PACKET_CODING: {
         for (int i = 0; i < iterations;) {
-            // TODO: Change this kernel
-            kernels::wireworld::compute_next_gen_lut(grid.get(), grid_size, snapshot_interval);
+            kernels::wireworld::compute_next_gen_packet_coding(grid.get(), grid_size,
+                                                               snapshot_interval);
             i += snapshot_interval;
             utils::save_grid_to_png_ww(grid.get(), grid_size, i);
         }
+        break;
     }
     default: {
         for (int i = 0; i < iterations;) {
@@ -103,6 +107,7 @@ void WireWorldCA::run(int iterations, int snapshot_interval, Implementation impl
             i += snapshot_interval;
             utils::save_grid_to_png_ww(grid.get(), grid_size, i);
         }
+        break;
     }
     }
 }

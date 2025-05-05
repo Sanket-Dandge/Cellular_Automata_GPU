@@ -1,5 +1,6 @@
 
 #include "kernels.cuh"
+#include <iostream>
 #include <stdio.h>
 
 #define LOOKUP_TABLE_LIMIT (17 * 8 + 1)
@@ -115,6 +116,25 @@ namespace kernels::wireworld {
         }
     }
 
+    __global__ void compute_next_gen_kernel_packet_coding(uint8_t *current_grid, uint8_t *next_grid,
+                                                          uint grid_size, uint8_t *lut) {
+        uint col = (blockIdx.x * blockDim.x + threadIdx.x) * 8;
+        uint row = blockIdx.y * blockDim.y + threadIdx.y;
+
+        size_t row_offset = row * grid_size;
+        size_t index = row_offset + col;
+
+        if (index >= grid_size * grid_size) {
+            printf("%d,%d\n", col, row);
+        }
+        uint8_t(*lookup_table)[LOOKUP_TABLE_LIMIT] = (uint8_t(*)[LOOKUP_TABLE_LIMIT])lut;
+
+        for(uint i = 0; i < 8; i++){
+            int sum = surround_sum(current_grid, col + i, row, grid_size);
+            next_grid[index + i] = lookup_table[current_grid[index + i]][sum];
+        }
+    }
+
     void compute_next_gen_base(uint8_t *current_grid, uint ca_grid_size, size_t niter) {
         // Allocate device memory
         uint8_t *d_current = nullptr, *d_next = nullptr;
@@ -172,6 +192,49 @@ namespace kernels::wireworld {
         int citers = 0;
         while (citers < niter) {
             kernels::wireworld::compute_next_gen_kernel_lut<<<grid_size, block_size>>>(
+                d_current, d_next, ca_grid_size, d_lut);
+            CUDA_CHECK(cudaGetLastError());
+            cudaDeviceSynchronize();
+            citers++;
+            swap(d_current, d_next);
+        }
+
+        // Copy result back to host
+        CUDA_CHECK(cudaMemcpy(current_grid, d_current, total_size * sizeof(uint8_t),
+                              cudaMemcpyDeviceToHost));
+        CUDA_CHECK(cudaFree(d_current));
+        CUDA_CHECK(cudaFree(d_next));
+        free(lut); // NOLINT
+    }
+
+    void compute_next_gen_packet_coding(uint8_t *current_grid, uint ca_grid_size, size_t niter) {
+        if (ca_grid_size < 256) {
+            cerr << "Grid too small: " << ca_grid_size << endl;
+        }
+        auto lut_size = sizeof(uint8_t) * (HEAD + 1) * LOOKUP_TABLE_LIMIT;
+        auto *lut = (uint8_t *)malloc(lut_size); // NOLINT
+        init_lookup_table(lut);
+
+        // Allocate device memory
+        uint8_t *d_current = nullptr, *d_next = nullptr, *d_lut = nullptr;
+        size_t total_size = ca_grid_size * ca_grid_size;
+        CUDA_CHECK(cudaMalloc(&d_current, total_size * sizeof(uint8_t)));
+        CUDA_CHECK(cudaMalloc(&d_next, total_size * sizeof(uint8_t)));
+        CUDA_CHECK(cudaMalloc(&d_lut, lut_size));
+
+        // Copy data to device
+        CUDA_CHECK(cudaMemcpy(d_current, current_grid, total_size * sizeof(uint8_t),
+                              cudaMemcpyHostToDevice));
+        CUDA_CHECK(cudaMemcpy(d_lut, lut, lut_size, cudaMemcpyHostToDevice));
+
+        // Launch kernel
+        dim3 block_size(32, 32);
+        dim3 grid_size((ca_grid_size + block_size.x - 1) / (block_size.x * 8),
+                       (ca_grid_size + block_size.y - 1) / (block_size.y));
+
+        int citers = 0;
+        while (citers < niter) {
+            kernels::wireworld::compute_next_gen_kernel_packet_coding<<<grid_size, block_size>>>(
                 d_current, d_next, ca_grid_size, d_lut);
             CUDA_CHECK(cudaGetLastError());
             cudaDeviceSynchronize();

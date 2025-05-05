@@ -32,7 +32,7 @@ class WireWorldCA {
     shared_ptr<uint8_t[]> grid;
 
     WireWorldCA();
-    WireWorldCA(shared_ptr<uint8_t[]> grid);
+    WireWorldCA(shared_ptr<uint8_t[]> grid, uint grid_size);
     // WireWorldCA(const string &filename);
     // WireWorldCA(const AutomatonConfiguration &config);
 

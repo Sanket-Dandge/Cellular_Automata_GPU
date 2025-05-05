@@ -15,6 +15,7 @@ uint8_t getSubCellH(uint64_t currentCell, char position);
 namespace kernels::wireworld {
     void compute_next_gen_base(uint8_t *current_grid, uint ca_grid_size, size_t niter);
     void compute_next_gen_lut(uint8_t *current_grid, uint ca_grid_size, size_t niter);
+    void compute_next_gen_packet_coding(uint8_t *current_grid, uint ca_grid_size, size_t niter);
 }
 namespace kernels::gol {
     void compute_next_gen(uint8_t *current_grid, size_t ca_grid_size, size_t niter);
