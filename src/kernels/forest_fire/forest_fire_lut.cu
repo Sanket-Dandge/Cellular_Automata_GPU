@@ -59,7 +59,7 @@ __global__ void forest_fire (int dim, CELL_TYPE *grid, CELL_TYPE *newGrid, CELL_
 
 
  
-int main(int argc, char* argv[])
+int forest_fire_lut(int timesteps)
 {
     int i,j,iter;
     float p;
@@ -73,7 +73,7 @@ int main(int argc, char* argv[])
     CELL_TYPE* d_lookup_table; 
 
     int dim = GRID_SIZE; //Linear dimension of our grid - not counting ghost cells
-    int maxIter = TIMESTEP; //Number of game steps
+    int maxIter = timesteps; //Number of game steps
  
     size_t bytes = sizeof(CELL_TYPE)*(dim+2)*(dim+2);//2 added for periodic boundary condition ghost cells
     // Allocate host Grid used for initial setup and read back from device

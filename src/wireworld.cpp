@@ -101,7 +101,7 @@ void WireWorldCA::run(int iterations, int snapshot_interval, Implementation impl
         }
         break;
     }
-    default: {
+    case BASE: {
         for (int i = 0; i < iterations;) {
             kernels::wireworld::compute_next_gen_base(grid.get(), grid_size, snapshot_interval);
             i += snapshot_interval;

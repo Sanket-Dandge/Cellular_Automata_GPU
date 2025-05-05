@@ -77,7 +77,8 @@ void GameOfLife::run(int iterations, int snapshot_interval, Implementation impl)
         }
         break;
     }
-    default: {
+    case LUT:
+    case BASE: {
         for (int i = 0; i < iterations;) {
             kernels::gol::compute_next_gen(grid.get(), grid_size, snapshot_interval);
             i += snapshot_interval;
