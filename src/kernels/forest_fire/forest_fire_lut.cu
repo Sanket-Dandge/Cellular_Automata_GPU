@@ -23,13 +23,8 @@
 
 //#define __VIDEO
 
-void init_lookup_table (CELL_TYPE *lookup_table);
-float r4_uniform_01 ( int *seed );
-uint8_t* generate_rgb (int width, int height, CELL_TYPE *grid_, uint8_t *rgb);
-void write_CA_screenshot_image (const char *filename, int width, int height, uint8_t *img);
 
-
-int seed = SEED; 	// Seed for random uniform number output.
+static int seed = SEED; 	// Seed for random uniform number output.
 
  
 __global__ void forest_fire (int dim, CELL_TYPE *grid, CELL_TYPE *newGrid, CELL_TYPE *lookup_table_)
@@ -58,130 +53,13 @@ __global__ void forest_fire (int dim, CELL_TYPE *grid, CELL_TYPE *newGrid, CELL_
 
 
 
- 
-int forest_fire_lut(int timesteps)
-{
-    int i,j,iter;
-    float p;
-    long unsigned int total_tree = 0, total_fire = 0;
-    CELL_TYPE* h_grid; //Grid on host
-    CELL_TYPE* d_grid; //Grid on device
-    CELL_TYPE* d_newGrid; //Second grid used on device only
-    CELL_TYPE* d_tmpGrid; //tmp grid pointer used to switch between grid and newGrid
 
-    CELL_TYPE* h_lookup_table; // Look-up table
-    CELL_TYPE* d_lookup_table; 
+namespace  {
 
-    int dim = GRID_SIZE; //Linear dimension of our grid - not counting ghost cells
-    int maxIter = timesteps; //Number of game steps
- 
-    size_t bytes = sizeof(CELL_TYPE)*(dim+2)*(dim+2);//2 added for periodic boundary condition ghost cells
-    // Allocate host Grid used for initial setup and read back from device
-    h_grid = (CELL_TYPE *)malloc(bytes);
-
-    #ifdef __VIDEO
-        char image_name[80];
-        uint8_t *rgb= (uint8_t *)malloc (3 * sizeof(uint8_t) *GRID_SIZE*GRID_SIZE);	
-    #endif
- 
-    // Allocate device grids
-    cudaMalloc(&d_grid, bytes);
-    cudaMalloc(&d_newGrid, bytes);
-
-    // Alocate look-up tables:
-    size_t bytes2 = sizeof(CELL_TYPE)*(FIRE+1)*(LOOKUP_TABLE_LIMIT);
-    h_lookup_table =  (CELL_TYPE *)malloc(bytes2);
-    cudaMalloc(&d_lookup_table, bytes2);
-
-    // Init look-up table:
-    init_lookup_table (h_lookup_table);
-
-    // Assign an initial forest randomly
-    for(i = 1; i<dim+1; i++) {
-        for(j = 1; j<dim+1; j++) {
-            p = r4_uniform_01(&seed);
-            if (p < P_FIRE) {
-                h_grid[i*(dim+2)+j] = FIRE;
-                total_fire++;
-            } else if (p < P_EMPTY) {
-                h_grid[i*(dim+2)+j] = EMPTY;
-            } else {
-                h_grid[i*(dim+2)+j] = TREE;
-                total_tree++;
-            }
-        }
-    }
-    // Borders are set to empty
-    for(i = 0; i<dim+2; i++) {
-        h_grid[i*(dim+2)] = EMPTY;
-        h_grid[i*(dim+2)+(dim+1)] = EMPTY;
-    }
-    for(j = 0; j<dim+2; j++) {
-        h_grid[j] = EMPTY;
-        h_grid[(dim+2)*(dim+1)+j] = EMPTY;
-    }
-
-
-    printf("Initial Tree: %ld Fire: %ld\n", total_tree, total_fire);
- 
-    // Copy over initial game grid (Dim-1 threads)
-    cudaMemcpy(d_grid, h_grid, bytes, cudaMemcpyHostToDevice);
- 
-    // Copy lookup-table
-    cudaMemcpy(d_lookup_table, h_lookup_table, bytes2, cudaMemcpyHostToDevice);
-
-    dim3 blockSize(BLOCK_SIZE, BLOCK_SIZE,1);
-    int linGrid = (int)ceil(dim/(float)BLOCK_SIZE);
-    dim3 gridSize(linGrid,linGrid,1);
- 
-    dim3 cpyBlockSize(BLOCK_SIZE,1,1);
-    dim3 cpyGridRowsGridSize((int)ceil(dim/(float)cpyBlockSize.x),1,1);
-    dim3 cpyGridColsGridSize((int)ceil((dim+2)/(float)cpyBlockSize.x),1,1);
- 
-    // Main game loop
-    for (iter = 0; iter<maxIter; iter++) {
-    #ifdef __VIDEO
-		if (iter==0 || iter==50 || iter==100 || iter==200 || iter==300) {
-            cudaMemcpy(h_grid, d_grid, bytes, cudaMemcpyDeviceToHost);
-			rgb = generate_rgb (GRID_SIZE+2, GRID_SIZE+2, h_grid, rgb);
-			sprintf (image_name, "%s%d.ppm", "ca_step_", iter);
-			write_CA_screenshot_image (image_name, GRID_SIZE+2, GRID_SIZE+2, rgb);
-		}
-    #endif
-        forest_fire<<<gridSize, blockSize>>>(dim, d_grid, d_newGrid, d_lookup_table);
-
-        // Swap our grids and iterate again
-        d_tmpGrid = d_grid;
-        d_grid = d_newGrid;
-        d_newGrid = d_tmpGrid;
-    }//iter loop
- 
-    // Copy back results and sum
-    cudaMemcpy(h_grid, d_grid, bytes, cudaMemcpyDeviceToHost);
- 
-    total_tree = 0; 
-    total_fire = 0;
-    // Sum up alive cells and print results
-    for (i = 1; i<=dim; i++) {
-        for (j = 1; j<=dim; j++) {
-            if (h_grid[i*(dim+2)+j] == TREE)
-                total_tree++;
-            else if (h_grid[i*(dim+2)+j] == FIRE)
-                total_fire++;
-        }
-    }
-    printf("Final Tree: %ld Fire: %ld\n", total_tree, total_fire);
- 
-    // Release memory
-    cudaFree(d_grid);
-    cudaFree(d_newGrid);
-    free(h_grid);
-    free (h_lookup_table);
-    cudaFree (d_lookup_table);
- 
-    return 0;
-}
-
+void init_lookup_table (CELL_TYPE *lookup_table);
+float r4_uniform_01 ( int *seed );
+uint8_t* generate_rgb (int width, int height, CELL_TYPE *grid_, uint8_t *rgb);
+void write_CA_screenshot_image (const char *filename, int width, int height, uint8_t *img);
 
 
 void init_lookup_table (CELL_TYPE *lookup_table_) {
@@ -399,4 +277,132 @@ void write_CA_screenshot_image (const char *filename, int width, int height, uin
 // 4096 Result in console: 
 // 8192 Result in console: 
 // 16384 Result in console: 
+
+
+}
+
+
+
+int forest_fire_lut(int timesteps)
+{
+    int i,j,iter;
+    float p;
+    long unsigned int total_tree = 0, total_fire = 0;
+    CELL_TYPE* h_grid; //Grid on host
+    CELL_TYPE* d_grid; //Grid on device
+    CELL_TYPE* d_newGrid; //Second grid used on device only
+    CELL_TYPE* d_tmpGrid; //tmp grid pointer used to switch between grid and newGrid
+
+    CELL_TYPE* h_lookup_table; // Look-up table
+    CELL_TYPE* d_lookup_table; 
+
+    int dim = GRID_SIZE; //Linear dimension of our grid - not counting ghost cells
+    int maxIter = timesteps; //Number of game steps
+ 
+    size_t bytes = sizeof(CELL_TYPE)*(dim+2)*(dim+2);//2 added for periodic boundary condition ghost cells
+    // Allocate host Grid used for initial setup and read back from device
+    h_grid = (CELL_TYPE *)malloc(bytes);
+
+    #ifdef __VIDEO
+        char image_name[80];
+        uint8_t *rgb= (uint8_t *)malloc (3 * sizeof(uint8_t) *GRID_SIZE*GRID_SIZE);	
+    #endif
+ 
+    // Allocate device grids
+    cudaMalloc(&d_grid, bytes);
+    cudaMalloc(&d_newGrid, bytes);
+
+    // Alocate look-up tables:
+    size_t bytes2 = sizeof(CELL_TYPE)*(FIRE+1)*(LOOKUP_TABLE_LIMIT);
+    h_lookup_table =  (CELL_TYPE *)malloc(bytes2);
+    cudaMalloc(&d_lookup_table, bytes2);
+
+    // Init look-up table:
+    init_lookup_table (h_lookup_table);
+
+    // Assign an initial forest randomly
+    for(i = 1; i<dim+1; i++) {
+        for(j = 1; j<dim+1; j++) {
+            p = r4_uniform_01(&seed);
+            if (p < P_FIRE) {
+                h_grid[i*(dim+2)+j] = FIRE;
+                total_fire++;
+            } else if (p < P_EMPTY) {
+                h_grid[i*(dim+2)+j] = EMPTY;
+            } else {
+                h_grid[i*(dim+2)+j] = TREE;
+                total_tree++;
+            }
+        }
+    }
+    // Borders are set to empty
+    for(i = 0; i<dim+2; i++) {
+        h_grid[i*(dim+2)] = EMPTY;
+        h_grid[i*(dim+2)+(dim+1)] = EMPTY;
+    }
+    for(j = 0; j<dim+2; j++) {
+        h_grid[j] = EMPTY;
+        h_grid[(dim+2)*(dim+1)+j] = EMPTY;
+    }
+
+
+    printf("Initial Tree: %ld Fire: %ld\n", total_tree, total_fire);
+ 
+    // Copy over initial game grid (Dim-1 threads)
+    cudaMemcpy(d_grid, h_grid, bytes, cudaMemcpyHostToDevice);
+ 
+    // Copy lookup-table
+    cudaMemcpy(d_lookup_table, h_lookup_table, bytes2, cudaMemcpyHostToDevice);
+
+    dim3 blockSize(BLOCK_SIZE, BLOCK_SIZE,1);
+    int linGrid = (int)ceil(dim/(float)BLOCK_SIZE);
+    dim3 gridSize(linGrid,linGrid,1);
+ 
+    dim3 cpyBlockSize(BLOCK_SIZE,1,1);
+    dim3 cpyGridRowsGridSize((int)ceil(dim/(float)cpyBlockSize.x),1,1);
+    dim3 cpyGridColsGridSize((int)ceil((dim+2)/(float)cpyBlockSize.x),1,1);
+ 
+    // Main game loop
+    for (iter = 0; iter<maxIter; iter++) {
+    #ifdef __VIDEO
+		if (iter==0 || iter==50 || iter==100 || iter==200 || iter==300) {
+            cudaMemcpy(h_grid, d_grid, bytes, cudaMemcpyDeviceToHost);
+			rgb = generate_rgb (GRID_SIZE+2, GRID_SIZE+2, h_grid, rgb);
+			sprintf (image_name, "%s%d.ppm", "ca_step_", iter);
+			write_CA_screenshot_image (image_name, GRID_SIZE+2, GRID_SIZE+2, rgb);
+		}
+    #endif
+        forest_fire<<<gridSize, blockSize>>>(dim, d_grid, d_newGrid, d_lookup_table);
+
+        // Swap our grids and iterate again
+        d_tmpGrid = d_grid;
+        d_grid = d_newGrid;
+        d_newGrid = d_tmpGrid;
+    }//iter loop
+ 
+    // Copy back results and sum
+    cudaMemcpy(h_grid, d_grid, bytes, cudaMemcpyDeviceToHost);
+ 
+    total_tree = 0; 
+    total_fire = 0;
+    // Sum up alive cells and print results
+    for (i = 1; i<=dim; i++) {
+        for (j = 1; j<=dim; j++) {
+            if (h_grid[i*(dim+2)+j] == TREE)
+                total_tree++;
+            else if (h_grid[i*(dim+2)+j] == FIRE)
+                total_fire++;
+        }
+    }
+    printf("Final Tree: %ld Fire: %ld\n", total_tree, total_fire);
+ 
+    // Release memory
+    cudaFree(d_grid);
+    cudaFree(d_newGrid);
+    free(h_grid);
+    free (h_lookup_table);
+    cudaFree (d_lookup_table);
+ 
+    return 0;
+}
 

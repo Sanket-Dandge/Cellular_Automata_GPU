@@ -26,6 +26,7 @@ target_link_libraries(${PROJECT_NAME}_kernels
 )
 add_library(${PROJECT_NAME}_ff
   src/kernels/forest_fire/forest_fire_baseline.cu
+  src/kernels/forest_fire/forest_fire_lut.cu
 )
 
 add_library(${PROJECT_NAME}_lib
