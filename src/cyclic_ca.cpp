@@ -133,7 +133,7 @@ void CyclicCA::run(int iterations, int snapshotInterval, Implementation kernel) 
                             reinterpret_cast<uint8_t*>(grid2),
                             grid_size);
         } else if (kernel == PACKET_CODING) {
-            cyclic_packet_coding_gen(grid1, grid2, grid_size);
+            cyclic_lookup_gen(reinterpret_cast<uint8_t*>(grid1), reinterpret_cast<uint8_t*>(grid2), grid_size);
         } else {
             cyclic_lookup_gen(reinterpret_cast<uint8_t*>(grid1),
                             reinterpret_cast<uint8_t*>(grid2),

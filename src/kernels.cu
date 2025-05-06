@@ -85,6 +85,7 @@ namespace kernels {
         }
         uint8_t nextStateNeighbor =
             kernels::cyclic_check_neighbors(currentGrid, col, row, N, index);
+        // printf("(%d, %d, %d)\n", row, col, lookup_table[current_cell * 2 + nextStateNeighbor]);
         nextGrid[index] = lookup_table[current_cell * 2 + nextStateNeighbor];
     }
 
@@ -249,7 +250,7 @@ void cyclic_packet_coding_gen(uint64_t *currentGrid, uint64_t *nextGrid, int N) 
     // Launch kernel
     dim3 blockSize(32, 32);
     // TODO: @sanket change the x dim of the grid here
-    dim3 gridSize((N + blockSize.x - 1) / blockSize.x, (N + blockSize.y - 1) / blockSize.y);
+    dim3 gridSize((ROW_SIZE + blockSize.x - 1) / blockSize.x, (N + blockSize.y - 1) / blockSize.y);
 
     kernels::cyclic_packet_coding_kernel<<<gridSize, blockSize>>>(d_current, d_next, N,
                                                                   d_lookup_table);
