@@ -60,8 +60,8 @@ int main(int argc, char *argv[]) {
              << endl;
         return 1;
     }
-    if (automaton != "gol" && result.count("config") != 0) {
-        cerr << "Config option is valid only for GoL" << endl;
+    if ((automaton != "gol" || automaton != "ww") && result.count("config") != 0) {
+        cerr << "Config option is valid only for GoL & WW" << endl;
     }
 
     const set<string> valid_kernels = {"base", "lut", "pc"};
@@ -112,7 +112,7 @@ int main(int argc, char *argv[]) {
         }
     } else if (automaton == "ww") {
         cout << "Running wireworld" << endl;
-        WireWorldCA ww;
+        WireWorldCA ww = result.count("config") ? WireWorldCA(config_file) : WireWorldCA();
         {
             ScopedTimer t(format("Iterations-{}", generations));
             ww.run(generations, snapshot_interval, impl);
