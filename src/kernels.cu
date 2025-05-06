@@ -137,6 +137,7 @@ namespace kernels {
 
             setSubCellD(&nextCell, 0, lookup_table[subcell * 2 + nextStateNeighbor]);
 
+            // TODO: should this -1 be there? @sanket
             for (int k = 1; k < ELEMENTS_PER_CELL - 1; k++) {
                 subcell = getSubCellD(currentCell, k);
                 nextStateNeighbor =
@@ -248,6 +249,7 @@ void cyclic_packet_coding_gen(uint64_t *currentGrid, uint64_t *nextGrid, int N) 
 
     // Launch kernel
     dim3 blockSize(32, 32);
+    // TODO: @sanket change the x dim of the grid here
     dim3 gridSize((N + blockSize.x - 1) / blockSize.x, (N + blockSize.y - 1) / blockSize.y);
 
     kernels::cyclic_packet_coding_kernel<<<gridSize, blockSize>>>(d_current, d_next, N,
