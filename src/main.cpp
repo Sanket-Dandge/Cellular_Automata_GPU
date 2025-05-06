@@ -1,3 +1,4 @@
+#include "common.hpp"
 #include "cyclic_ca.hpp"
 #include "forest_fire.hpp"
 #include "game_of_life.hpp"
@@ -89,9 +90,8 @@ int main(int argc, char *argv[]) {
     } else if (automaton == "cca") {
         CyclicCA cca;
         {
-            // TODO: Add this option
             ScopedTimer t(format("Iterations-{}", generations));
-            cca.run(generations, snapshot_interval);
+            cca.run(generations, snapshot_interval, impl);
         }
     } else if (automaton == "ff") {
         {

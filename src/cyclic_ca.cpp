@@ -1,4 +1,5 @@
 #include "cyclic_ca.hpp"
+#include "common.hpp"
 #include "kernels.hpp"
 #include <cstddef>
 #include <cstdint>
@@ -113,7 +114,7 @@ uint64_t* CyclicCA::test_grid_packet_coding1(uint64_t* output_grid, int size) {
     return output_grid;
 }
 
-void CyclicCA::run(int iterations, int snapshotInterval) {
+void CyclicCA::run(int iterations, int snapshotInterval, Implementation kernel) {
     // Allocate two separate grids
     auto raw_grid1 = std::make_unique<uint8_t[]>(grid_size * grid_size * sizeof(uint64_t));
     auto raw_grid2 = std::make_unique<uint8_t[]>(grid_size * grid_size * sizeof(uint64_t));
@@ -127,14 +128,17 @@ void CyclicCA::run(int iterations, int snapshotInterval) {
               reinterpret_cast<uint8_t*>(grid1));
 
     for (int i = 0; i < iterations; i++) {
-        cyclic_baseline(reinterpret_cast<uint8_t*>(grid1),
-                        reinterpret_cast<uint8_t*>(grid2),
-                        grid_size);
-        // cyclic_lookup_gen(reinterpret_cast<uint8_t*>(grid1),
-        //                 reinterpret_cast<uint8_t*>(grid2),
-        //                 grid_size);
-
-        // cyclic_packet_coding_gen(grid1, grid2, grid_size);
+        if (kernel == BASE) {
+            cyclic_baseline(reinterpret_cast<uint8_t*>(grid1),
+                            reinterpret_cast<uint8_t*>(grid2),
+                            grid_size);
+        } else if (kernel == PACKET_CODING) {
+            cyclic_packet_coding_gen(grid1, grid2, grid_size);
+        } else {
+            cyclic_lookup_gen(reinterpret_cast<uint8_t*>(grid1),
+                            reinterpret_cast<uint8_t*>(grid2),
+                            grid_size);
+        }
 
         if (i % snapshotInterval == 0) {
             utils::save_grid_to_png(reinterpret_cast<uint8_t*>(grid2), grid_size, i);

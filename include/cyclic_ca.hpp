@@ -1,6 +1,7 @@
 #ifndef CYCLIC_CA_HPP
 #define CYCLIC_CA_HPP
 
+#include "common.hpp"
 #include "utils.h"
 #include <cstdint>
 #include <memory>
@@ -44,7 +45,7 @@ class CyclicCA {
         CyclicCA(shared_ptr<uint64_t[]> packet_grid);
         CyclicCA(const string& filename);
 
-        void run(int iterations, int snapshotInterval = 10);
+        void run(int iterations, int snapshotInterval, Implementation kernel);
         static void create_lookup_table(uint8_t table[TOTAL_STATES][2]);
         uint8_t* test_grid1(uint8_t* grid, int size);
         uint64_t* test_grid_packet_coding1(uint64_t* grid, int size);

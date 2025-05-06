@@ -85,7 +85,6 @@ namespace kernels {
         }
         uint8_t nextStateNeighbor =
             kernels::cyclic_check_neighbors(currentGrid, col, row, N, index);
-        // printf("(%d, %d, %d)\n", row, col, lookup_table[current_cell * 2 + nextStateNeighbor]);
         nextGrid[index] = lookup_table[current_cell * 2 + nextStateNeighbor];
     }
 
