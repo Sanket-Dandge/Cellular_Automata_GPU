@@ -6,7 +6,11 @@
 #include <chrono>
 #include <cstdio>
 #include <doctest.h>
+#include <filesystem>
 #include <iostream>
+
+using namespace std;
+namespace fs = std::filesystem;
 
 // NOLINTBEGIN
 TEST_CASE("Wireworld_base") {
@@ -64,5 +68,13 @@ TEST_CASE("Wireworld_packet_coding") {
     ww.run(10, 1, PACKET_CODING);
 
     CHECK(std::memcmp(grid.get(), exp10.get(), size) == 0);
+}
+
+TEST_CASE("Wireworld_from_wi_file") {
+    CHECK_NOTHROW_MESSAGE({
+        auto wi_path = fs::path("patterns/primes.wi");
+        auto ww = WireWorldCA(wi_path);
+        utils::save_grid_to_png_ww(ww.grid.get(), ww.get_grid_size(), 0);
+    }, "Exception occured in wireworld wi file test");
 }
 // NOLINTEND

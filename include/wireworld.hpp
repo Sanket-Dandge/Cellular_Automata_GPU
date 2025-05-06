@@ -1,9 +1,12 @@
 #pragma once
 
+#include "common.hpp"
 #include "utils.h"
 #include <cstdint>
+#include <filesystem>
 #include <string>
-#include "common.hpp"
+
+namespace fs = std::filesystem;
 
 static const int default_grid_size = 256;
 
@@ -29,7 +32,7 @@ class WireWorldCA {
 
     WireWorldCA();
     WireWorldCA(shared_ptr<uint8_t[]> grid, uint grid_size);
-    // WireWorldCA(const string &filename);
+    WireWorldCA(const fs::path &filename);
     // WireWorldCA(const AutomatonConfiguration &config);
 
     void run(int iterations, int snapshot_interval = 10, Implementation impl = BASE);

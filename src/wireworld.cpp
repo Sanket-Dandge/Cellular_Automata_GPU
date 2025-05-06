@@ -1,6 +1,9 @@
 #include "wireworld.hpp"
 #include "kernels.hpp"
 
+#include <algorithm>
+#include <filesystem>
+#include <fstream>
 #include <iostream>
 #include <utility>
 
@@ -76,10 +79,52 @@ WireWorldCA::WireWorldCA() {
     utils::save_grid_to_png_ww(grid.get(), grid_size, 0);
 }
 WireWorldCA::WireWorldCA(shared_ptr<uint8_t[]> grid, uint p_grid_size)
-    : grid_size(p_grid_size), grid(std::move(grid)) {
-}
+    : grid_size(p_grid_size), grid(std::move(grid)) {}
 
-// WireWorldCA::WireWorldCA(const string &filename) {}
+WireWorldCA::WireWorldCA(const fs::path &filename) {
+    // Read .wi file used by quinapalus site
+    ifstream ifs(filename);
+    uint h = 0, w = 0;
+    ifs >> w >> h;
+    grid_size = bit_ceil(max({h, w, 32U}));
+
+    grid = shared_ptr<uint8_t[]>(new uint8_t[grid_size * grid_size]);
+    char ch = 0;
+    uint col = 0, row = 0;
+    ifs.get(ch); // get the stray \n
+    while (ifs.get(ch)) {
+        switch (ch) {
+        case ' ': {
+            grid[(grid_size * row) + col] = EMPTY;
+            col++;
+            break;
+        }
+        case '#': {
+            grid[(grid_size * row) + col] = CONDUCTOR;
+            col++;
+            break;
+        }
+        case '@': {
+            grid[(grid_size * row) + col] = HEAD;
+            col++;
+            break;
+        }
+        case '~': {
+            grid[(grid_size * row) + col] = TAIL;
+            col++;
+            break;
+        }
+        case '\n': {
+            if (col != w) {
+                throw runtime_error(format("col != width, {} != {}", col, w));
+            }
+            col = 0;
+            row++;
+            break;
+        }
+        }
+    }
+}
 
 void WireWorldCA::run(int iterations, int snapshot_interval, Implementation impl) {
     utils::save_grid_to_png_ww(grid.get(), grid_size, 0);
